@@ -1,0 +1,81 @@
+============================================================
+PROMPT 3.6 — Navigation, History Screen + App Polish
+============================================================
+
+PROMPT --- Screen 5, bottom navigation, offline mode, final polish
+
+Context: All 4 main screens are complete. Final polish needed.
+
+Create or complete:
+
+1. HistoryFragment.kt + fragment_history.xml (Screen 5):
+
+- Shows last 7 simulation runs stored in local database (Room)
+
+- Simple line chart (use MPAndroidChart or built-in Canvas drawing)
+showing throughput trend
+
+- Each row: date/time | throughput | bottleneck station | color dot
+
+- Tamil/English labels
+
+- HistoryDao.kt + SimulationHistoryEntity.kt (Room database)
+
+- Auto-saves every simulation result to history
+
+2. MainActivity.kt:
+
+- Single Activity with NavHostFragment
+
+- Bottom navigation bar with 5 items: Home, Simulate, Bottleneck
+(hidden, shown when result exists), Compare, History
+
+- Navigation icons: use Material Design icons
+
+- Language toggle in toolbar applies to ENTIRE app immediately
+
+3. Offline Mode:
+
+- If GET /health fails: show banner \"Working offline --- showing last
+results\"
+
+- Banner color: amber, non-dismissable while offline
+
+- All screens still work using cached last simulation result
+
+- Retry button in banner
+
+4. Factory Setup Screen (first launch only):
+
+- Shown once on first install
+
+- Factory type selector (Lathe / Textile / Food / Electronics)
+
+- Machine checklist (from MACHINE_CATALOGUE --- same as Python)
+
+- Server URL input (default: http://192.168.1.100:8000)
+
+- Language selection: English / தமிழ்
+
+- \"Save & Continue\" sends POST /config to server and navigates to
+Home
+
+5. App-wide polish:
+
+- Splash screen with factory icon
+
+- All loading states use skeleton screens (not just spinners)
+
+- All error states show friendly message + retry button
+
+- Minimum text size: 14sp everywhere
+
+- All touch targets: minimum 48dp
+
+| Module 4 --- Unity 3D Factory Scene                               |
+|                                                                       |
+| 5 prompts --- 3D visualization from scratch                         |
+
+Build the Unity 3D factory scene. You already have small Unity project
+experience --- these prompts assume that. Create a new Unity 3D project
+(URP) before starting.

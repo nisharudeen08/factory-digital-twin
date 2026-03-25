@@ -1,0 +1,159 @@
+============================================================
+PROMPT 7.4 — Push Notifications for Real-Time Alerts
+============================================================
+
+PROMPT --- Notify factory supervisor instantly when a bottleneck
+forms
+
+**Context: Real-time data is flowing from machines to the digital
+twin.**
+
+Now I need the system to automatically alert the factory supervisor
+when a bottleneck forms ---
+
+without the supervisor having to open the app.
+
+Implement push notifications:
+
+PYTHON SIDE --- alert_engine.py:
+
+- Monitor incoming sensor data in background
+
+- Trigger alert when: utilization of any station exceeds 0.90 for more
+than 2 consecutive minutes
+
+- Trigger alert when: queue at any station exceeds 10 jobs
+
+- Trigger alert when: machine goes from \"running\" to \"broken\"
+
+- Use Firebase Cloud Messaging (FCM) to send push notification to
+registered Android devices
+
+- Alert payload: { \"station_id\": 3, \"alert_type\": \"bottleneck\",
+\"utilization\": 0.94, \"message_en\": \"Bottleneck forming at Welding
+Station\", \"message_ta\": \"வெல்டிங் நிலையத்தில் தடை உருவாகிறது\" }
+
+- De-bounce: do not send more than 1 alert per station per 10 minutes
+
+ANDROID SIDE:
+
+- Integrate Firebase SDK (add google-services.json)
+
+- Register device FCM token with Python server on app startup: POST
+/register_device
+
+- Handle incoming FCM notification:
+
+- Show as Android notification with factory icon
+
+- Tapping notification opens BottleneckFragment directly
+
+- Notification text in user's selected language (Tamil or English)
+
+- Notification channel: \"Factory Alerts\" --- high importance, bypass
+do-not-disturb for critical alerts
+
+SUPERVISOR ROLE:
+
+- In SettingsScreen: toggle \"Receive Alerts\" on/off
+
+- Set alert threshold: \"Alert me when utilization exceeds \_\_\_%\"
+(slider: 80-99%)
+
+- Quiet hours: no alerts between 10pm and 6am
+
+Show complete code for both Python FCM integration and Android
+notification handling.
+
+| Quick Reference --- Prompt Order Cheat Sheet                      |
+|                                                                       |
+| Print this page and keep it next to your screen                     |
+
+Follow this exact order. Do not skip steps. Each prompt builds on the
+previous.
+
+----------- ---------- --------------------------------- ------------------------
+Order   Prompt   What Gets Built               Before You Start**
+ID**                                         
+
+1           1.1        Full project folder structure +   New empty project
+README                            
+
+2           1.2        Factory config + machine          After 1.1
+catalogue                         
+
+3           1.3        DataSource interface (static + RT After 1.2
+stubs)                            
+
+4           2.1        Math engine (all equations)       After 1.3
+
+5           2.2        SimPy simulation engine           After 2.1
+
+6           2.3        What-if engine + pre-built        After 2.2
+scenarios                         
+
+7           2.4        FastAPI REST server               After 2.3
+
+8           2.5        Unity WebSocket bridge            After 2.4
+
+9           2.6        Markov chain module (optional)    After 2.5
+
+10          2.7        LP optimizer (optional)           After 2.6
+
+11          2.8        Test all Python modules           All Python done
+
+12          3.1        Android project + network layer   Python server running
+
+13          3.2        Home Dashboard screen             After 3.1
+
+14          3.3        Simulation input screen           After 3.2
+
+15          3.4        Bottleneck alert screen           After 3.3
+
+16          3.5        What-If comparison screen         After 3.4
+
+17          3.6        History + navigation + offline    After 3.5
+mode                              
+
+18          4.1        MachineSpawner.cs --- auto-builds New Unity project
+factory                           
+
+19          4.2        MachineVisual.cs --- colors +     After 4.1
+queue                             
+
+20          4.3        SimulationManager.cs ---          After 4.2
+WebSocket                         
+
+21          4.4        Build all machine prefabs (Editor After 4.3
+steps)                            
+
+22          4.5        Heatmap + camera setup            After 4.4
+
+23          5.1        Config sync: Android → Python →   All 3 layers done
+Unity                             
+
+24          5.2        Full end-to-end integration test  After 5.1
+
+--          D1--D6     Debug prompts                     When something breaks
+
+--          7.1--7.4   Real-time upgrade prompts         Static twin working
+----------- ---------- --------------------------------- ------------------------
+
+--------------- -------------------------------------------------------------
+IMPORTANT   When pasting any prompt into Antigravity IDE, always include
+the Context lines at the top. These tell the AI what files
+already exist so it does not recreate things you have already
+built. Update the context lines as your project grows.
+
+--------------- -------------------------------------------------------------
+
+--------- -------------------------------------------------------------
+**IF      If Antigravity IDE gives code that does not work, use the
+STUCK**   relevant Debug Prompt (D1-D6). Copy the broken code into the
+debug prompt at the [PASTE...] markers. The debug prompt
+gives the AI all the context it needs to find the exact
+problem.
+
+--------- -------------------------------------------------------------
+
+End of Antigravity IDE Prompt Library --- Version 1.0

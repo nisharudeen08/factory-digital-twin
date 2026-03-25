@@ -1,0 +1,59 @@
+============================================================
+PROMPT 2.6 — Markov Chain Module
+============================================================
+
+PROMPT --- Machine state modelling --- cascade failures and availability
+
+Context: I am adding advanced math to the digital twin. math_engine.py exists.
+
+Add to math_engine.py (or create markov_engine.py):
+
+MARKOV CHAIN MACHINE MODEL:
+
+Function build_transition_matrix(condition: str) -> np.ndarray:
+
+- Returns 4x4 matrix for states: Running(0), Degraded(1), Broken(2), Maintenance(3)
+
+- \"good\" P =
+[[0.95,0.04,0.01,0.00],[0.40,0.55,0.04,0.01],[0,0,0,1],[0.90,0.07,0.03,0]]
+
+- \"average\" P =
+[[0.92,0.06,0.02,0.00],[0.30,0.60,0.08,0.02],[0,0,0,1],[0.85,0.10,0.05,0]]
+
+- \"poor\" P =
+[[0.85,0.09,0.06,0.00],[0.20,0.55,0.18,0.07],[0,0,0,1],[0.75,0.15,0.10,0]]
+
+Function solve_steady_state(P: np.ndarray) -> np.ndarray:
+
+- Solve pi @ P = pi with sum(pi) = 1
+
+- Use numpy.linalg.solve
+
+- Return pi = [pi_running, pi_degraded, pi_broken, pi_maintenance]
+
+- pi_running = effective machine availability
+
+Function calc_cascade_breakdown_rate(base_lambda, utilization, threshold=0.75, k=2.0):
+
+- Returns lambda_breakdown(rho) = base_lambda  exp(k  (rho - threshold)) for rho
+> threshold
+
+- Returns base_lambda for rho <= threshold
+
+Function calc_mean_first_passage_time(P: np.ndarray, from_state: int, to_state: int)
+-> float:
+
+- Returns expected steps to reach to_state from from_state
+
+- Use linear system solution
+
+Function get_machine_health_label(pi_running: float) -> str:
+
+- Returns \"Good\" if pi_running > 0.90
+
+- Returns \"Average\" if 0.75 < pi_running <= 0.90
+
+- Returns \"Poor\" if pi_running <= 0.75
+
+- Include Tamil translations in return dict: { \"en\": \"Good\", \"ta\": \"நல்லது\",
+\"color\": \"green\" }

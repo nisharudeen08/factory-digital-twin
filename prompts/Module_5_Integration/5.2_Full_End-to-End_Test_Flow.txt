@@ -1,0 +1,76 @@
+============================================================
+PROMPT 5.2 — Full End-to-End Test Flow
+============================================================
+
+PROMPT --- Verify the complete system works: Android → Python →
+Unity → back to Android
+
+Context: All three components are built and individually tested.
+
+Help me test the complete system end-to-end. Write a test checklist AND
+the exact commands to run.
+
+TEST SEQUENCE:
+
+1. Start Python server: command to run on laptop or Raspberry Pi
+
+2. Start Unity: play mode on tablet
+
+3. Open Android app on phone
+
+TEST CASE 1 --- Factory Setup:
+
+- Android: select Lathe factory, choose 5 machines, save
+
+- Expected: Python logs \"Config received\", Unity rebuilds to show 5
+machines
+
+- Check: Unity shows correct machine prefabs at correct positions
+
+TEST CASE 2 --- Run Simulation:
+
+- Android: enter demand=150, operators=2, shift=8h, condition=Average,
+tap Simulate
+
+- Expected: response in under 5 seconds
+
+- Check: Android shows bottleneck alert, Unity machines change color,
+WebSocket messages logged
+
+TEST CASE 3 --- Bottleneck Detection:
+
+- Set one station cycle_time very high (e.g. 120s when others are 45s)
+in config
+
+- Run simulation
+
+- Check: that exact station gets red color in Unity AND is flagged in
+Android
+
+TEST CASE 4 --- What-If:
+
+- From BottleneckScreen, tap \"Add Machine\"
+
+- Check: comparison shows throughput increase, recommendation shown in
+Tamil
+
+TEST CASE 5 --- Offline:
+
+- Stop Python server
+
+- Check: Android shows offline banner, last results still visible,
+Unity shows \"OFFLINE\"
+
+For each test case: tell me what log output to look for in Python,
+Android Logcat, and Unity Console.
+
+Create a test_integration.sh script that runs automated checks on the
+Python side.
+
+| Module 6 --- Debug Prompts                                        |
+|                                                                       |
+| When something breaks --- copy the right prompt                     |
+
+These prompts are for when things go wrong. Each one tells Antigravity
+IDE exactly what the problem is, what you have already tried, and what
+output to give you.

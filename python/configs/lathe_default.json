@@ -1,0 +1,22 @@
+{
+  "factory_type": "lathe",
+  "factory_name": "My Lathe Factory",
+  "mode": "static",
+  "language": "en",
+  "shift_hours": 8,
+  "num_operators": 2,
+  "stations": [
+    {"id":1,"name":"Lathe Machine","name_ta":"தட்டு இயந்திரம்",
+     "icon":"lathe","cycle_time_sec":45,"num_machines":2,
+     "mtbf_hours":8,"mttr_hours":0.5,"position_x":0,"position_z":0},
+    {"id":2,"name":"CNC Milling","name_ta":"சி.என்.சி. மில்லிங்",
+     "icon":"cnc","cycle_time_sec":60,"num_machines":1,
+     "mtbf_hours":12,"mttr_hours":0.5,"position_x":5,"position_z":0},
+    {"id":3,"name":"Welding Station","name_ta":"வெல்டிங் நிலையம்",
+     "icon":"weld","cycle_time_sec":55,"num_machines":1,
+     "mtbf_hours":6,"mttr_hours":1.0,"position_x":10,"position_z":0},
+    {"id":4,"name":"QC Inspection","name_ta":"தர சரிபார்ப்பு",
+     "icon":"qc","cycle_time_sec":20,"num_machines":1,
+     "mtbf_hours":48,"mttr_hours":0.2,"position_x":15,"position_z":0}
+  ]
+}

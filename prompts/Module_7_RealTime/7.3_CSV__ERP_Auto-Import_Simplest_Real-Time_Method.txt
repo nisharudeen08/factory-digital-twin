@@ -1,0 +1,59 @@
+============================================================
+PROMPT 7.3 — CSV / ERP Auto-Import (Simplest Real-Time Method)
+============================================================
+
+PROMPT --- Connect to Tally, SAP, or any spreadsheet-based
+production system
+
+**Context: My factory uses Tally / local ERP software that can export
+production data to CSV.**
+
+This is the simplest real-time integration --- no sensors or special
+hardware needed.
+
+Complete the CSVDataSource class in data_source.py.
+
+Requirements:
+
+- Watch a folder for new/updated CSV files using watchdog library: pip
+install watchdog
+
+- CSV format (what Tally/ERP typically exports):
+
+date, shift, machine_id, machine_name, parts_completed,
+downtime_minutes, operator_name
+
+- Parse latest row for each machine_id
+
+- Calculate effective cycle time: (shift_hours * 60 -
+downtime_minutes) * 60 / parts_completed
+
+- Update self.latest_readings[machine_id] on each new CSV row
+
+- If CSV has not been updated in > 5 minutes: show warning, use last
+known values
+
+Python endpoint GET /erp/status:
+
+- Returns: which machines have recent CSV data (< 5 min) vs stale
+data (> 5 min)
+
+- Shows: last update time per machine
+
+Android update:
+
+- ERP import option in Connection screen: folder path input (or file
+picker)
+
+- Show \"Last ERP update: 3 minutes ago\" on HomeFragment
+
+- If update > 10 minutes: show amber warning: \"Production data may
+be outdated\"
+
+Also create: erp_template.csv --- an example CSV file showing the exact
+column format
+
+And: erp_instructions.txt --- plain English instructions for the
+factory Tally operator
+
+explaining exactly which report to export and where to save it

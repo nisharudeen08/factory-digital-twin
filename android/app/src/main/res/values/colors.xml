@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary -->
+    <color name="primary">#6D28D9</color>
+    <color name="primary_100">#EDE9FE</color>
+    <color name="primary_200">#DDD6FE</color>
+    <color name="primary_dark">#4C1D95</color>
+
+    <!-- Backgrounds -->
+    <color name="background_light">#F8F7FF</color>
+    <color name="background_dark">#171220</color>
+    <color name="surface_white">#FFFFFF</color>
+    <color name="surface_dark">#1E293B</color>
+    <color name="terminal_bg">#0F172A</color>
+    <color name="panel_accent">#1E293B</color>
+
+    <!-- Chips -->
+    <color name="chip_bg_unselected">#F3F4F6</color>
+    <color name="chip_text_unselected">#6B7280</color>
+    <color name="chip_bg_selected">#EDE9FE</color>
+    <color name="chip_text_selected">#6D28D9</color>
+    <color name="chipBlueBg">#DBEAFE</color>
+    <color name="chipBlueText">#1D4ED8</color>
+    <color name="chipGreenBg">#DCFCE7</color>
+    <color name="chipGreenText">#15803D</color>
+    <color name="chipRedBg">#FEE2E2</color>
+    <color name="chipRedText">#B91C1C</color>
+    <color name="chipAmberBg">#FEF3C7</color>
+    <color name="chipAmberText">#92400E</color>
+    <color name="chipOrangeBg">#FFF7ED</color>
+    <color name="chipOrangeText">#C2410C</color>
+    <color name="chipPurpleBg">#EDE9FE</color>
+    <color name="chipPurpleText">#5B21B6</color>
+
+    <!-- Step progress -->
+    <color name="step_future">#9CA3AF</color>
+    <color name="step_future_bg">#F3F4F6</color>
+    <color name="step_active">#6D28D9</color>
+    <color name="step_done">#6D28D9</color>
+
+    <!-- Status -->
+    <color name="danger">#EF4444</color>
+    <color name="danger_bg">#FEF2F2</color>
+    <color name="danger_border">#FECACA</color>
+    <color name="success">#22C55E</color>
+    <color name="success_bg">#F0FDF4</color>
+    <color name="success_border">#BBF7D0</color>
+    <color name="warning">#F59E0B</color>
+    <color name="warning_bg">#FFFBEB</color>
+    <color name="info">#3B82F6</color>
+    <color name="info_bg">#EFF6FF</color>
+    <color name="accent_green">#22C55E</color>
+    <color name="accent_amber">#F59E0B</color>
+    <color name="accent_red">#EF4444</color>
+
+    <!-- Nav -->
+    <color name="nav_active">#6D28D9</color>
+    <color name="nav_inactive">#9CA3AF</color>
+
+    <!-- Text -->
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_hint">#9CA3AF</color>
+
+    <!-- Basic -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
+    <color name="divider">#E5E7EB</color>
+</resources>

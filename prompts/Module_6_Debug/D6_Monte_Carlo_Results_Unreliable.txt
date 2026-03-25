@@ -1,0 +1,57 @@
+============================================================
+PROMPT D6 — Monte Carlo Results Unreliable
+============================================================
+
+PROMPT --- Use when: Monte Carlo results change too much between
+runs, or P10/P90 range is too wide
+
+**I am debugging Monte Carlo simulation results in my digital twin math
+engine.**
+
+Problem: [describe --- e.g. \"P10=120 units and P90=280 units ---
+range is too wide\"
+
+OR \"Running same simulation twice gives very different P50\"]
+
+My Monte Carlo function:
+
+[PASTE your run_monte_carlo function]
+
+My input distributions:
+
+[PASTE the distributions you are using for cycle times, demand,
+breakdowns]
+
+Please:
+
+1. Check if random seeds are being set correctly (each trial needs a
+different seed)
+
+2. Check if n_trials=10000 is enough --- calculate the standard error
+of the mean
+
+3. Check if input distributions are calibrated correctly:
+
+- CV for cycle times should be 0.08--0.25 for factory machines
+
+- If CV is > 0.5, distributions are too variable and results will be
+unreliable
+
+4. Check if the Weibull parameters for breakdowns are reasonable for
+manufacturing
+
+5. Check if the P10/P90 range makes physical sense:
+
+- A range of more than ±30% of P50 suggests input distributions are
+too wide
+
+6. Show me corrected distribution parameters and explain why they are
+more realistic
+
+| Module 7 --- Real-Time Upgrade Prompts                            |
+|                                                                       |
+| Phase 2: connecting real machines --- no manual input               |
+
+Use these prompts when you are ready to upgrade from the static twin to
+real-time IoT data. You must have the static twin fully working before
+starting Module 7.

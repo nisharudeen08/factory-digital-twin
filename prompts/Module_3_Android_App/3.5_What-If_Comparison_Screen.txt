@@ -1,0 +1,76 @@
+============================================================
+PROMPT 3.5 — What-If Comparison Screen
+============================================================
+
+PROMPT --- Screen 4 --- side-by-side scenario comparison for
+managers
+
+Context: BottleneckFragment is complete.
+
+Create: WhatIfFragment.kt + fragment_whatif.xml
+
+This screen compares the current situation against proposed changes.
+Maximum 3 numbers visible at once.
+
+UI Layout:
+
+HEADER: \"What If...\" / \"என்னவாகும்?\" with scenario name
+
+TWO COLUMN COMPARISON:
+
+Left column header: \"Current\" / \"இப்போது\" (gray background)
+
+Right column header: \"[Scenario Name]\" / Tamil (blue background)
+
+Three rows of comparison (ONLY these three metrics):
+
+Row 1 --- Daily Output:
+
+- Left: \"187 units\"
+
+- Right: \"210 units\" with UP ARROW in green
+
+- Delta chip: \"+23 units (+12%)\" in green
+
+Row 2 --- Lead Time:
+
+- Left: \"4.2 hours\"
+
+- Right: \"3.8 hours\" with DOWN ARROW in green (less time is better)
+
+- Delta chip: \"-0.4 hours (-10%)\" in green
+
+Row 3 --- On-Time Risk:
+
+- Left: traffic light --- RED (high risk)
+
+- Right: traffic light --- GREEN (low risk)
+
+- Text: \"Will meet deadline\" / \"காலக்கெடுவை பூர்த்தி செய்யும்\"
+
+CONFIDENCE BANDS:
+
+Under each number, small text: \"Range: 175--199\" / \"Range:
+198--222\"
+
+RECOMMENDATION CARD (below comparison):
+
+- One sentence plain English + Tamil
+
+- \"Adding one machine at Station 3 increases daily output by 23
+units.\"
+
+SCENARIO SELECTOR (horizontal scroll chips at top):
+
+- Chip for each pre-built scenario: Add Machine / Add Operator /
+Reduce Batch / More Demand
+
+- Tapping a chip calls POST /whatif and updates the comparison
+
+WhatIfViewModel.kt:
+
+- Stores baseline result
+
+- Fetches scenario result on chip tap
+
+- Formats all display values with correct signs (+/-) and colors

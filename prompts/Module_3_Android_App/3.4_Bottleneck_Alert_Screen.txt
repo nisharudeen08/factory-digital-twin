@@ -1,0 +1,79 @@
+============================================================
+PROMPT 3.4 — Bottleneck Alert Screen
+============================================================
+
+PROMPT --- Screen 3 --- the most important screen, shown after
+simulation
+
+Context: SimulateFragment and HomeFragment are complete.
+
+Create: BottleneckFragment.kt + fragment_bottleneck.xml
+
+This screen shows WHERE the problem is and WHAT TO DO. No jargon.
+Workers must understand in 5 seconds.
+
+UI Layout:
+
+ALERT HEADER CARD (full width, red background):
+
+- Large warning icon (48dp)
+
+- Station name in HUGE text (24sp bold): \"BOTTLENECK: Welding
+Station\" / \"தடை: வெல்டிங் நிலையம்\"
+
+- Sub text: \"This machine is slowing your entire factory\" / \"இந்த
+இயந்திரம் உங்கள் தொழிற்சாலையை மெதுவாக்குகிறது\"
+
+IMPACT CARD (how much is it costing?):
+
+- \"You are losing approximately 23 units/day\" (calculated from
+shadow price)
+
+- Tamil translation
+
+- Lost value in Rupees if unit_value is set in config (optional)
+
+UTILIZATION METER:
+
+- Custom horizontal bar: 0% to 100%
+
+- Filled portion colored: green<70%, amber<85%, orange<95%,
+red>=95%
+
+- Current value label on the bar: \"94%\"
+
+- Label: \"Machine is nearly full\" / \"இயந்திரம் கிட்டத்தட்ட நிரம்பியது\"
+
+QUEUE DISPLAY:
+
+- Row of small box icons representing jobs waiting
+
+- Text: \"8 jobs waiting in queue\" / \"8 வேலைகள் காத்திருக்கின்றன\"
+
+THREE ACTION BUTTONS (suggested fixes):
+
+Each button shows what-if result will be (pre-computed):
+
+- \"Add 1 Machine → +23 units/day\" (tap to see full what-if)
+
+- \"Add 1 Operator → +12 units/day\"
+
+- \"Reduce Batch Size → +8 units/day\"
+
+Each button: icon + English/Tamil label + expected gain
+
+ALL STATIONS VIEW (collapsible card at bottom):
+
+- Table: Station | Utilization | Status
+
+- Color-coded rows
+
+- Collapsed by default, expands on tap
+
+BottleneckViewModel.kt:
+
+- Receives SimulationResponse from navigation arguments
+
+- Pre-computes what-if button labels using what-if results
+
+- Exposes formatted UiState with all display values

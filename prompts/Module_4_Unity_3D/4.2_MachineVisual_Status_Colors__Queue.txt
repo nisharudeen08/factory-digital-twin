@@ -1,0 +1,75 @@
+============================================================
+PROMPT 4.2 — MachineVisual (Status Colors + Queue)
+============================================================
+
+PROMPT --- Color-coding and queue display --- what workers look at
+
+**Context: MachineSpawner.cs is complete. Now I need each machine to
+show its live status.**
+
+Create: Assets/Scripts/MachineVisual.cs (attach to each machine prefab)
+
+This script makes machines change color based on data from Python and
+shows queue boxes.
+
+SERIALIZED FIELDS:
+
+- public int stationId
+
+- public string stationName
+
+- public Renderer bodyRenderer --- the main machine body mesh
+
+- public Transform queueParent --- empty transform in front of machine
+(for queue boxes)
+
+- public GameObject wipBoxPrefab --- small cube prefab for WIP items
+
+- public TextMeshPro stationLabel --- floating label above machine
+
+- public GameObject bottleneckArrow --- arrow GameObject (child,
+initially inactive)
+
+- public GameObject workerAvatar --- Mixamo character (child)
+
+- public Animator workerAnimator
+
+MATERIALS (create 5 materials: Mat_Green, Mat_Yellow, Mat_Orange,
+Mat_Red, Mat_Gray):
+
+- public Material matRunning, matWatch, matAlert, matBottleneck,
+matBroken
+
+METHOD UpdateStatus(float utilization, int queueLength, string status,
+bool isBottleneck):
+
+1. Set material based on thresholds: <0.70=Green, <0.85=Yellow,
+<0.95=Orange, >=0.95=Red, broken=Gray
+
+2. If isBottleneck: activate bottleneckArrow, start pulse coroutine,
+set matBottleneck
+
+3. Else: deactivate bottleneckArrow
+
+4. Update queue boxes: destroy existing, spawn queueLength boxes in a
+row in front of machine
+
+Position formula: queueParent.position + Vector3.right  i  0.5f
+
+5. Update worker animation: \"running\" -> \"Work\" trigger, \"idle\"
+-> \"Idle\", \"broken\" -> \"Walk\"
+
+COROUTINE PulseBottleneckArrow():
+
+- Continuously scale arrow between 1.0 and 1.4 using Mathf.Lerp
+
+- Period: 0.8 seconds
+
+- Emit red point light (set intensity 0 to 2 and back)
+
+METHOD SetLabel(string name, float util, int queue):
+
+- stationLabel.text = name + newline + util*100 + \"%\" + newline +
+\"Q:\" + queue
+
+- Color label text: same color as machine material

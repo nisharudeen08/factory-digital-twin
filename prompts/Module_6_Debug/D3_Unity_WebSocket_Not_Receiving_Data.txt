@@ -1,0 +1,41 @@
+============================================================
+PROMPT D3 — Unity WebSocket Not Receiving Data
+============================================================
+
+PROMPT --- Use when: Unity machines stay gray and never update
+
+I am debugging a Unity C# WebSocket connection to a Python server.
+
+Problem: Unity connects to WebSocket (no error in Console) but machines
+never change color.
+
+The Python server IS sending messages every 500ms (confirmed by
+printing in Python).
+
+Unity Console output: [PASTE what you see]
+
+Python WebSocket server: [PASTE the broadcast function code]
+
+My Unity SimulationManager code:
+
+[PASTE your OnMessage handler]
+
+Please check:
+
+1. Is OnMessage being called? Add Debug.Log as first line to verify.
+
+2. Is JsonUtility.FromJson matching the JSON structure exactly? (field
+names are case-sensitive)
+
+3. Is the main thread dispatch working? (Unity UI can only be updated
+from main thread)
+
+4. Is stationObjects dictionary populated before messages arrive?
+
+(MachineSpawner must call RegisterStation BEFORE WebSocket connects)
+
+5. Does the JSON use integer ids or string ids? (must match C# class
+definition)
+
+6. Fix the issue and show corrected code for both Python broadcast and
+Unity OnMessage

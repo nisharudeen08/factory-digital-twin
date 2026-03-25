@@ -1,0 +1,203 @@
+# I will first update the build.gradle in unityLibrary
+write_file(
+    absolutePath="C:/Users/nisharu deen/Downloads/PROJECT/factory_digital_twin/android/app/unityLibrary/build.gradle",
+    text="""plugins {
+    id 'com.android.library'
+}
+
+android {
+    namespace "com.unity3d.player"
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 26
+        targetSdk 34
+        consumerProguardFiles "proguard-unity.txt"
+        
+        ndk {
+            abiFilters "arm64-v8a"
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-unity.txt'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+    }
+
+    androidResources {
+        ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~"
+        noCompress = ['.unity3d', '.ress', '.resource', '.obb', '.bundle', '.unityexp']
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+}
+
+dependencies {
+    api fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core:1.9.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.games:games-activity:3.0.5'
+    implementation 'androidx.games:games-frame-pacing:2.1.2'
+}
+"""
+)
+
+# Now I will update Unity3DFragment.kt to use the correct class and initialization pattern
+write_file(
+    absolutePath="C:/Users/nisharu deen/Downloads/PROJECT/factory_digital_twin/android/app/src/main/java/com/factory/digitaltwin/ui/unity/Unity3DFragment.kt",
+    text="""package com.factory.digitaltwin.ui.unity
+
+import android.graphics.Color
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.factory.digitaltwin.R
+import com.factory.digitaltwin.data.local.SettingsManager
+import com.factory.digitaltwin.databinding.FragmentUnity3dBinding
+import com.factory.digitaltwin.network.FactoryWebSocket
+import com.factory.digitaltwin.network.RetrofitClient
+import com.unity3d.player.UnityPlayerForGameActivity
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import java.net.URI
+
+class Unity3DFragment : Fragment() {
+
+    private var _binding: FragmentUnity3dBinding? = null
+    private val binding get() = _binding!!
+
+    private var webSocket: FactoryWebSocket? = null
+    private lateinit var settingsManager: SettingsManager
+    
+    // Unity player instance for GameActivity
+    private var unityPlayer: UnityPlayerForGameActivity? = null
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentUnity3dBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        settingsManager = SettingsManager(requireContext())
+
+        // Initialize Unity using the GameActivity pattern
+        val activity = requireActivity()
+        val surfaceView = UnityPlayerForGameActivity.createSurfaceView(activity)
+        
+        unityPlayer = UnityPlayerForGameActivity(activity, binding.unityContainer, surfaceView, null)
+        
+        // Add Unity player view to our container
+        binding.unityContainer.addView(
+            surfaceView,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+        
+        surfaceView.requestFocus()
+        unityPlayer?.windowFocusChanged(true)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val baseUrl = settingsManager.serverIpFlow.first()
+            RetrofitClient.updateBaseUrl(baseUrl)
+            connectWebSocket(baseUrl)
+        }
+    }
+
+    private fun connectWebSocket(baseUrl: String) {
+        val wsUrl = toWebSocketUrl(baseUrl)
+        webSocket?.close()
+        webSocket = FactoryWebSocket(URI(wsUrl)).also { socket ->
+            socket.connect()
+
+            viewLifecycleOwner.lifecycleScope.launch {
+                socket.connectedFlow.collectLatest { connected ->
+                    binding.statusDot.setBackgroundColor(
+                        Color.parseColor(if (connected) "#22C55E" else "#EF4444")
+                    )
+                }
+            }
+
+            viewLifecycleOwner.lifecycleScope.launch {
+                socket.stateFlow.collectLatest { state ->
+                    if (state == null) {
+                        return@collectLatest
+                    }
+
+                    binding.shiftProgress.progress = (state.shiftPct * 100).toInt()
+                    binding.shiftLabel.text = getString(
+                        R.string.shift_progress_value,
+                        (state.shiftPct * 100).toInt()
+                    )
+                }
+            }
+        }
+    }
+
+    private fun toWebSocketUrl(baseUrl: String): String {
+        val normalized = if (baseUrl.startsWith("http://") || baseUrl.startsWith("https://")) {
+            baseUrl
+        } else {
+            "http://$baseUrl"
+        }
+
+        return normalized
+            .replaceFirst("http://", "ws://")
+            .replaceFirst("https://", "wss://")
+            .replace(":8000", ":8765")
+            .let { if (it.endsWith("/")) it.dropLast(1) else it }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        unityPlayer?.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        unityPlayer?.onPause()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Use destroy() for UnityPlayerForGameActivity
+        unityPlayer?.destroy()
+        unityPlayer = null
+        
+        webSocket?.close()
+        webSocket = null
+        _binding = null
+    }
+}
+"""
+)

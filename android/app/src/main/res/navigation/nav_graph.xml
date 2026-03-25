@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+    xmlns:android=
+        "http://schemas.android.com/apk/res/android"
+    xmlns:app=
+        "http://schemas.android.com/apk/res-auto"
+    xmlns:tools=
+        "http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name=
+            "com.factory.digitaltwin.ui.home.WorkerDashboardFragment"
+        android:label="Home"
+        tools:layout=
+            "@layout/fragment_worker_dashboard"/>
+
+    <fragment
+        android:id="@+id/nav_simulate"
+        android:name=
+            "com.factory.digitaltwin.ui.simulate.SimulateFragment"
+        android:label="Simulate"
+        tools:layout=
+            "@layout/fragment_simulate"/>
+
+    <fragment
+        android:id="@+id/nav_bottleneck"
+        android:name=
+            "com.factory.digitaltwin.ui.bottleneck.BottleneckFragment"
+        android:label="Bottleneck"
+        tools:layout=
+            "@layout/fragment_bottleneck"/>
+
+    <fragment
+        android:id="@+id/nav_unity3d"
+        android:name=
+            "com.factory.digitaltwin.ui.unity.Unity3DFragment"
+        android:label="3D View"
+        tools:layout=
+            "@layout/fragment_unity3d"/>
+
+    <fragment
+        android:id="@+id/nav_history"
+        android:name=
+            "com.factory.digitaltwin.ui.history.HistoryFragment"
+        android:label="History"
+        tools:layout=
+            "@layout/fragment_history"/>
+
+</navigation>

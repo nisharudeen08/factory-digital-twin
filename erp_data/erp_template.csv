@@ -1,0 +1,6 @@
+station_id,machine_status,qty_produced_last_hour,scrap_qty_last_hour,active_operator
+1,running,42,1,Ramesh
+2,running,55,0,Suresh
+3,broken,10,5,Karthik
+4,running,48,2,Arun
+5,maintenance,0,0,Vijay

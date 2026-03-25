@@ -1,0 +1,41 @@
+============================================================
+PROMPT D2 — Android Cannot Connect to Python Server
+============================================================
+
+PROMPT --- Use when: Android app shows 'connection failed' or
+network error
+
+**I am debugging an Android app connecting to a FastAPI server on local
+Wi-Fi.**
+
+Error message in Android Logcat: [PASTE the error message]
+
+Python server is running on IP: [X.X.X.X] port 8000
+
+Android phone and Python server are on the same Wi-Fi network:
+confirmed by pinging the IP
+
+Things I have already tried:
+
+- Confirmed Python server is running (curl http://[IP]:8000/health
+works from laptop browser)
+
+- App has INTERNET permission in AndroidManifest.xml
+
+My Retrofit setup:
+
+[PASTE your RetrofitClient.kt]
+
+Please check:
+
+1. Is the BASE_URL format correct? (must end with /)
+
+2. Android 9+ blocks HTTP --- is usesCleartextTraffic=\"true\" set in
+AndroidManifest for local development?
+
+3. Is the Retrofit timeout long enough? (simulation takes 2-3 seconds)
+
+4. Is the Content-Type header set to application/json on POST
+requests?
+
+5. Fix the code showing exactly what to change and where

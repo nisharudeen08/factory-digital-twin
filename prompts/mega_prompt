@@ -1,0 +1,575 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║          MASTER PROMPT — FACTORY DIGITAL TWIN (SINGLE SHOT)                ║
+║          Paste this ENTIRE block into Antigravity IDE as ONE message        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ROLE & GOAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You are a senior full-stack engineer building a complete Factory Digital Twin
+system. You will produce ALL files for all three layers in a single response,
+working from bottom to top in this exact dependency order:
+
+    [1] Python Simulation Server   ← foundation, build first
+    [2] Android Phone App          ← connects to Python
+         ├── Unity 3D Factory tab  ← renders live 3D from WebSocket
+         ├── Monitoring Dashboard  ← real-time charts and alerts
+         └── Controls tab          ← send commands to Python
+
+Write COMPLETE, RUNNABLE code — no placeholders, no "// TODO", no ellipsis.
+Every file must work on its own and integrate with the others.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SYSTEM ARCHITECTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Phone App (Android, Kotlin)
+   │  HTTP  →  POST /simulate, POST /command, GET /status
+   │  WebSocket  →  ws://[server]:8765  (receives live factory state)
+   ▼
+Python Simulation Server (FastAPI + SimPy + WebSocket)
+   │  runs on laptop or Raspberry Pi on same Wi-Fi
+   │  broadcasts factory state JSON every 500 ms to all connected clients
+   ▼
+factory_config.json  (shared config file — Android writes, Python reads)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LAYER 1 — PYTHON SIMULATION SERVER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Create these files in /python_server/:
+
+─── requirements.txt ──────────────────────────────────────────────────────────
+fastapi uvicorn simpy numpy scipy websockets python-multipart
+
+─── factory_config.json (default, inside /configs/) ──────────────────────────
+Schema — all fields required:
+{
+  "factory_name": "My Factory",
+  "factory_type": "lathe",          // lathe | textile | food | electronics
+  "shift_hours": 8,
+  "num_operators": 2,
+  "mode": "static",                 // static | realtime
+  "language": "en",                 // en | ta
+  "stations": [
+    {
+      "id": 1,
+      "name": "Lathe Machine",
+      "name_ta": "தட்டு இயந்திரம்",
+      "icon": "lathe_machine",
+      "cycle_time_sec": 45,
+      "num_machines": 1,
+      "mtbf_hours": 8,
+      "mttr_hours": 0.5,
+      "position_x": 0,
+      "position_z": 0
+    }
+  ]
+}
+Include a default lathe factory with 5 stations pre-filled.
+
+─── simulation_engine.py ──────────────────────────────────────────────────────
+Use SimPy for discrete-event simulation.
+
+Class Station:
+- Properties: id, name, num_machines (SimPy Resource), cycle_time_mean
+- process_job(env, job): SimPy generator
+    1. Request machine resource
+    2. Get cycle_time = numpy.random.normal(mean, mean*0.15)
+    3. yield env.timeout(cycle_time)
+    4. Check breakdown: if numpy.random.random() < (1/mtbf_hours/720):
+         yield env.timeout(mttr_hours * 3600)  // repair
+    5. Release resource, record: arrival_time, wait_time, process_time
+
+Class ProductionLine:
+- __init__(config): builds Station list from factory_config.json
+- run_shift(shift_hours, demand, seed=None) -> ShiftResult
+    - Creates SimPy env, runs until shift_hours*3600 sim-seconds
+    - Returns ShiftResult with per-station metrics
+
+Class ShiftResult (dataclass):
+- throughput: int
+- stations: list[StationMetric]
+- bottleneck_id: int
+- bottleneck_name: str
+- lead_time_mean: float
+- shift_completion_pct: float
+
+Class StationMetric (dataclass):
+- id, name, name_ta
+- utilization: float        // 0.0 – 1.0
+- queue_length: int
+- wait_time_mean: float
+- is_bottleneck: bool
+- status: str               // "running" | "idle" | "broken"
+
+─── math_engine.py ────────────────────────────────────────────────────────────
+Pure math functions — no SimPy dependency:
+
+calc_utilization(arrival_rate, service_rate, num_machines) -> float
+    rho = arrival_rate / (service_rate * num_machines)
+
+calc_bottleneck_index(utilization, queue_len, queue_max) -> float
+    BNI = 0.5 * utilization + 0.3 * (queue_len / max(queue_max, 1)) + 0.2 * utilization^2
+
+identify_bottleneck(metrics: list[StationMetric]) -> StationMetric
+    returns station with highest BNI
+
+run_monte_carlo(config, demand, n_trials=500) -> dict
+    Run n_trials SimPy replications, collect throughput values
+    Return: { p10, p50, p90, mean, std }
+    Use numpy for speed — vectorize what you can
+
+calc_confidence_interval(values: list[float]) -> tuple[float, float]
+    95% CI using scipy.stats.t.interval
+
+─── api_server.py ─────────────────────────────────────────────────────────────
+FastAPI application. CORS allow all origins.
+
+Endpoints:
+
+GET  /health
+     Response: { status, mode, server_time, last_sim_id, connected_clients }
+
+POST /simulate
+     Body: { demand: int, operators: int, shift_hours: float,
+             machine_condition: "good"|"average"|"poor", language: "en"|"ta" }
+     Action: run 30-replication SimPy simulation in thread pool (asyncio)
+     Response: {
+       sim_id, throughput_mean, throughput_p10, throughput_p90,
+       lead_time_mean, bottleneck_id, bottleneck_name, bottleneck_name_ta,
+       utilization_per_station: [ {id, name, name_ta, util, queue, is_bottleneck} ],
+       alert_en, alert_ta, confidence_interval: [lower, upper]
+     }
+
+POST /command
+     Body: { action: "pause"|"resume"|"reset"|"update_speed",
+             value: float (optional, for speed) }
+     Action: controls the live WebSocket broadcast loop
+     Response: { acknowledged: true, action, timestamp }
+
+POST /config
+     Body: full factory_config JSON
+     Action: validates, saves to configs/factory_config.json, reloads engine
+     Response: { valid: bool, errors: list[str], station_count: int }
+
+GET  /stations
+     Response: array of current StationMetric for all stations
+
+GET  /whatif/{scenario}
+     scenario options: add_machine | add_operator | reduce_batch | two_shifts
+     Response: { baseline: ShiftResult, scenario: ShiftResult,
+                 throughput_delta, throughput_delta_pct,
+                 recommendation_en, recommendation_ta }
+
+─── websocket_bridge.py ───────────────────────────────────────────────────────
+Runs alongside FastAPI on port 8765.
+
+Class WebSocketBridge:
+- connected_clients: set of WebSocket connections
+- current_state: dict  (latest factory state snapshot)
+- running: bool
+
+broadcast_loop():
+    Every 500ms, send current_state to all clients as JSON:
+    {
+      "t": unix_timestamp,
+      "shift_pct": 0.0-1.0,
+      "throughput_so_far": int,
+      "stations": [
+        { "id", "name", "name_ta", "util", "queue",
+          "status", "is_bottleneck", "position_x", "position_z" }
+      ],
+      "alert_en": null or string,
+      "alert_ta": null or string,
+      "mode": "static" | "realtime"
+    }
+
+On client connect: immediately send current_state (not waiting 500ms)
+On client message: handle "ping" → reply "pong", "request_config" → reply full config JSON
+On client disconnect: remove from set, log
+
+update_state(result: ShiftResult): called by api_server after each simulation
+
+─── run_server.py ─────────────────────────────────────────────────────────────
+Starts both FastAPI (port 8000) and WebSocket (port 8765) in same process.
+Print on startup:
+  "✓ Factory Server  →  http://localhost:8000"
+  "✓ WebSocket Feed  →  ws://localhost:8765"
+  "✓ Android Connect →  http://[YOUR_LAN_IP]:8000"
+  "  Docs            →  http://localhost:8000/docs"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LAYER 2 — ANDROID APP (Kotlin, single APK, three tabs)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Architecture: Single Activity → ViewPager2 with 3 tabs → BottomNavigationView
+
+Tabs:
+  Tab 1 — "3D Factory"      (Unity 3D embedded view)
+  Tab 2 — "Dashboard"       (live monitoring)
+  Tab 3 — "Controls"        (send commands to Python)
+
+─── build.gradle (app) ───────────────────────────────────────────────────────
+Dependencies — use these exact versions:
+  implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+  implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+  implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+  implementation 'com.google.android.material:material:1.11.0'
+  implementation 'androidx.navigation:navigation-fragment-ktx:2.7.6'
+  implementation 'org.java-websocket:Java-WebSocket:1.5.4'
+  implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+  implementation 'com.unity3d.player:unityLibrary:2022.3.+'  // Unity AAR
+  implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
+  implementation 'androidx.datastore:datastore-preferences:1.0.0'
+  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+
+AndroidManifest.xml must include:
+  android:usesCleartextTraffic="true"
+  <uses-permission android:name="android.permission.INTERNET"/>
+
+─── Network Layer ─────────────────────────────────────────────────────────────
+
+ApiService.kt (Retrofit interface):
+  @GET("health")          suspend fun getHealth(): HealthResponse
+  @POST("simulate")       suspend fun simulate(@Body req: SimRequest): SimResponse
+  @POST("command")        suspend fun sendCommand(@Body cmd: CommandRequest): CommandResponse
+  @POST("config")         suspend fun postConfig(@Body cfg: FactoryConfig): ConfigResponse
+  @GET("whatif/{scene}")  suspend fun getWhatIf(@Path("scene") s: String): WhatIfResponse
+
+RetrofitClient.kt:
+  Singleton. Reads BASE_URL from DataStore.
+  OkHttp timeout: connectTimeout=10s, readTimeout=30s, writeTimeout=10s.
+  All calls return Result<T> = sealed class { Success(data), Error(msg), Loading }
+
+FactoryWebSocket.kt:
+  Uses org.java_websocket.client.WebSocketClient
+  val serverUrl: String  (ws://[ip]:8765)
+  Callbacks: onOpen, onMessage(json: String), onClose, onError
+  Auto-reconnect: after 3s on unexpected close
+  Exposes StateFlow<FactoryState?> that emits on every new message
+  Parses incoming JSON to FactoryState data class
+
+─── Data Models (data classes in models/) ────────────────────────────────────
+
+FactoryState.kt:
+  data class FactoryState(
+    val t: Long, val shiftPct: Float, val throughputSoFar: Int,
+    val stations: List<StationLive>, val alertEn: String?,
+    val alertTa: String?, val mode: String
+  )
+  data class StationLive(
+    val id: Int, val name: String, val nameTa: String,
+    val util: Float, val queue: Int, val status: String,
+    val isBottleneck: Boolean, val positionX: Float, val positionZ: Float
+  )
+
+SimRequest.kt, SimResponse.kt, CommandRequest.kt, FactoryConfig.kt, Station.kt
+  — match the Python API JSON exactly (use @SerializedName where needed)
+
+─── SettingsManager.kt ───────────────────────────────────────────────────────
+DataStore wrapper. Stores and retrieves:
+  server_url (default: "http://192.168.1.100:8000")
+  language: "en" or "ta"
+  factory_type: "lathe"
+  last_sim_id: String
+
+─── TAB 1 — Unity3DFragment.kt + fragment_unity3d.xml ───────────────────────
+Embeds Unity as a sub-Activity using UnityPlayer inside a FrameLayout.
+
+Layout:
+  ┌─────────────────────────────────────────┐
+  │  [Connection dot] Factory Name   [⚙]   │  ← toolbar
+  ├─────────────────────────────────────────┤
+  │                                         │
+  │         UNITY PLAYER VIEW               │
+  │         (fills remaining space)         │
+  │                                         │
+  └─────────────────────────────────────────┘
+  Bottom: shift progress bar (0–100%)
+
+Behavior:
+  - Subscribes to FactoryWebSocket.stateFlow
+  - On each new FactoryState: sends JSON to Unity via
+      UnityPlayer.UnitySendMessage("SimulationManager", "OnFactoryState", json)
+  - Connection dot: green if WebSocket open, red if closed
+  - If WebSocket disconnects: show overlay "Reconnecting..." in amber
+
+─── TAB 2 — DashboardFragment.kt + fragment_dashboard.xml ───────────────────
+Real-time monitoring dashboard. No technical jargon.
+
+Layout (ScrollView → LinearLayout):
+
+  TOP SUMMARY CARD:
+    Background: GREEN (#16A34A) if no bottleneck, RED (#DC2626) if bottleneck
+    Large text (20sp bold, white):
+      EN: "Factory running normally" / "BOTTLENECK: [Station Name]"
+      TA: "தொழிற்சாலை சாதாரணமாக இயங்குகிறது" / "தடை: [நிலையம்]"
+    Sub-text: "Output so far: [N] units  |  Shift: [X]% complete"
+
+  STATION CARDS (RecyclerView, vertical list):
+    One card per station from live WebSocket data.
+    Card shows:
+      Station name (EN + TA below it, smaller)
+      Utilization bar: 0–100%, color-coded
+        < 70% = green,  < 85% = amber,  < 95% = orange,  ≥ 95% = red
+      Queue count badge: "Q: [N]"
+      Status pill: RUNNING (green) / IDLE (gray) / BROKEN (red)
+      If is_bottleneck = true: red "⚠ BOTTLENECK" badge top-right of card
+    Cards animate in with stagger on first load (50ms delay per card)
+
+  THROUGHPUT CHART (MPAndroidChart LineChart):
+    Shows last 60 data points (30 seconds of WebSocket data)
+    X-axis: time (seconds ago)
+    Y-axis: utilization % of bottleneck station
+    Two lines: actual utilization (red) and safe threshold (green dashed at 85%)
+    Chart updates smoothly on each WebSocket message (notifyDataSetChanged)
+
+  CONFIDENCE INTERVAL CARD (visible only after a simulation has run):
+    "Expected shift output: [P50] units"
+    Horizontal range bar showing P10 → P50 → P90
+    "Range: [P10] – [P90] units"
+
+  DashboardViewModel.kt:
+    Collects from FactoryWebSocket.stateFlow
+    Maintains CircularBuffer<Float>(60) for chart history
+    Exposes: StateFlow<DashboardUiState>
+    DashboardUiState: { factoryState, chartData, simResult, isOnline }
+
+─── TAB 3 — ControlsFragment.kt + fragment_controls.xml ─────────────────────
+Send commands to Python server. Two sections.
+
+SECTION A — RUN SIMULATION:
+
+  Card 1 — "How many products today?" / "இன்று எத்தனை பொருட்கள்?"
+    NumberPicker or stepper buttons: range 50–500, step 10, default 150
+    
+  Card 2 — "Workers on shift" / "ஷிப்டில் தொழிலாளர்கள்"
+    Chip group: 1 / 2 / 3 / 4 (single select, default = 2)
+    
+  Card 3 — "Shift length" / "வேலை நேரம்"
+    Chip group: 6h / 8h / 10h / 12h (single select, default = 8h)
+    
+  Card 4 — "Machine condition" / "இயந்திர நிலை"
+    Three toggle buttons: Good ✅ / Average ⚠️ / Poor ❌
+    Colors when selected: green / amber / red
+    
+  [SIMULATE] button: full-width, 56dp, primary color
+    - Shows CircularProgressIndicator while waiting
+    - On success: show result Snackbar + navigate to Dashboard tab
+    - On error: show plain-language error Snackbar (no stack trace)
+
+SECTION B — LIVE CONTROLS (controls running WebSocket broadcast):
+
+  [▶ Resume] / [⏸ Pause] toggle button → POST /command {action: "pause"/"resume"}
+  [↺ Reset Factory] button → POST /command {action: "reset"}  + confirmation dialog
+  Speed slider: "Broadcast speed" 1× / 2× / 4× → POST /command {action:"update_speed", value:X}
+
+  ControlsViewModel.kt:
+    Calls ApiService via coroutine + Result<T> wrapper
+    Exposes: StateFlow<ControlsUiState> { isLoading, lastCommandAck, simResult, error }
+
+─── MainActivity.kt ──────────────────────────────────────────────────────────
+Single Activity hosting ViewPager2 + BottomNavigationView.
+
+  - Initializes FactoryWebSocket on create, closes on destroy
+  - BottomNavigationView: 3 items — "3D View" / "Dashboard" / "Controls"
+  - ViewPager2: swipe between tabs, synced with bottom nav
+  - Language toggle in toolbar: switches between EN and TA instantly app-wide
+    (recreate Activity with new Locale)
+  - Offline banner: amber non-dismissable bar at top when WebSocket disconnected
+    Shows "Reconnecting..." with retry button
+  - First launch: show SetupDialog (server URL + language + factory type)
+    Saves to DataStore via SettingsManager
+
+─── strings.xml + strings-ta.xml ────────────────────────────────────────────
+Include ALL string resources used in the app. Tamil strings for every key.
+Key strings (minimum): app_name, tab_3d, tab_dashboard, tab_controls,
+factory_running, bottleneck_alert, simulate, output_today, workers,
+shift_length, machine_condition, good, average, poor, running, broken, idle,
+queue, utilization, resume, pause, reset, broadcast_speed, offline_banner,
+reconnecting, save, cancel, server_url_hint, expected_output, range,
+shift_progress, add_machine, add_operator, reduce_batch, two_shifts
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LAYER 3 — UNITY 3D (C#, embedded inside Android)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Unity 2022 LTS, URP. All scripts go in Assets/Scripts/.
+
+─── SimulationManager.cs ─────────────────────────────────────────────────────
+Receives factory state from Android (via UnitySendMessage, NOT WebSocket).
+
+[System.Serializable] class FactoryStateMsg { same fields as FactoryState }
+[System.Serializable] class StationMsg { id, name, util, queue, status, isBottleneck, positionX, positionZ }
+
+Dictionary<int, MachineVisual> stationMap  (populated by MachineSpawner on Start)
+
+void OnFactoryState(string json):
+    Parse with JsonUtility.FromJson<FactoryStateMsg>(json)
+    For each station in msg.stations: stationMap[id].UpdateStatus(util, queue, status, isBottleneck)
+    Update globalStatusText: "BOTTLENECK: [name]" red or "Running" green
+    Update shiftProgressBar.fillAmount = msg.shiftPct
+
+void RegisterStation(int id, MachineVisual m): stationMap[id] = m
+
+─── MachineSpawner.cs ────────────────────────────────────────────────────────
+Reads factory_config.json from Application.persistentDataPath on Start().
+Builds 3D scene automatically.
+
+void BuildFactory(string configJson):
+    Parse config. Destroy all children of factoryParent.
+    For each station:
+      Instantiate prefab at (station.positionX, 0, station.positionZ)
+      Get MachineVisual component, set id and name
+      SimulationManager.RegisterStation(id, visual)
+    Log: "Factory built: [N] stations"
+
+─── MachineVisual.cs ─────────────────────────────────────────────────────────
+Attached to every machine prefab.
+
+public int stationId
+public Renderer bodyRenderer
+public TextMeshPro label
+public GameObject bottleneckArrow   // red arrow above machine
+public Transform queueParent        // WIP boxes spawn here
+
+Materials: matGreen, matAmber, matOrange, matRed, matGray
+
+void UpdateStatus(float util, int queue, string status, bool isBottleneck):
+    1. Set material:
+         util < 0.70 → matGreen
+         util < 0.85 → matAmber
+         util < 0.95 → matOrange
+         util ≥ 0.95 → matRed
+         status == "broken" → matGray
+    2. bottleneckArrow.SetActive(isBottleneck)
+    3. If isBottleneck and not already pulsing: StartCoroutine(PulseArrow())
+    4. Rebuild queue boxes: destroy old, spawn [queue] small cubes at
+         queueParent.position + Vector3.right * i * 0.4f
+    5. label.text = name + "\n" + (util*100).ToString("F0") + "% Q:" + queue
+    6. label color = same tint as material
+
+IEnumerator PulseArrow():
+    while (isActiveAndEnabled):
+        scale 1.0 → 1.5 → 1.0 using Mathf.SmoothStep over 0.8s
+        yield return null
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT FORMAT — PRODUCE FILES IN THIS EXACT ORDER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Output each file with a header like this, then the full file content:
+
+=== FILE: python_server/requirements.txt ===
+[full content]
+
+=== FILE: python_server/configs/factory_config.json ===
+[full content]
+
+=== FILE: python_server/simulation_engine.py ===
+[full content]
+
+=== FILE: python_server/math_engine.py ===
+[full content]
+
+=== FILE: python_server/websocket_bridge.py ===
+[full content]
+
+=== FILE: python_server/api_server.py ===
+[full content]
+
+=== FILE: python_server/run_server.py ===
+[full content]
+
+=== FILE: android_app/build.gradle ===
+[full content]
+
+=== FILE: android_app/AndroidManifest.xml ===
+[full content]
+
+=== FILE: android_app/res/values/strings.xml ===
+[full content]
+
+=== FILE: android_app/res/values-ta/strings.xml ===
+[full content]
+
+=== FILE: android_app/models/FactoryState.kt ===
+[full content]
+
+=== FILE: android_app/network/ApiService.kt ===
+[full content]
+
+=== FILE: android_app/network/RetrofitClient.kt ===
+[full content]
+
+=== FILE: android_app/network/FactoryWebSocket.kt ===
+[full content]
+
+=== FILE: android_app/SettingsManager.kt ===
+[full content]
+
+=== FILE: android_app/MainActivity.kt ===
+[full content]
+
+=== FILE: android_app/unity/Unity3DFragment.kt ===
+[full content]
+
+=== FILE: android_app/dashboard/DashboardFragment.kt ===
+[full content]
+
+=== FILE: android_app/dashboard/DashboardViewModel.kt ===
+[full content]
+
+=== FILE: android_app/controls/ControlsFragment.kt ===
+[full content]
+
+=== FILE: android_app/controls/ControlsViewModel.kt ===
+[full content]
+
+=== FILE: android_app/res/layout/fragment_unity3d.xml ===
+[full content]
+
+=== FILE: android_app/res/layout/fragment_dashboard.xml ===
+[full content]
+
+=== FILE: android_app/res/layout/fragment_controls.xml ===
+[full content]
+
+=== FILE: unity/Assets/Scripts/SimulationManager.cs ===
+[full content]
+
+=== FILE: unity/Assets/Scripts/MachineSpawner.cs ===
+[full content]
+
+=== FILE: unity/Assets/Scripts/MachineVisual.cs ===
+[full content]
+
+=== INTEGRATION CHECKLIST ===
+After all files are written, produce a numbered checklist:
+1. How to run the Python server (exact command)
+2. How to build and install the Android APK
+3. How to export Unity as Android Library and import into the app
+4. How to connect (server IP configuration)
+5. How to verify end-to-end: Python → WebSocket → Android → Unity 3D
+6. Common errors and their fixes
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+QUALITY CONSTRAINTS — APPLY TO EVERY FILE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✓  NO placeholders. No "// implement this later". No "...".
+  ✓  All Kotlin: use coroutines + StateFlow. No callbacks, no AsyncTask.
+  ✓  All Python: type hints on every function. Docstrings on every class.
+  ✓  FastAPI: every endpoint handles exceptions, returns proper HTTP codes.
+  ✓  Android: all text ≥ 14sp. All touch targets ≥ 48dp.
+  ✓  Tamil strings: every EN string has a matching TA translation.
+  ✓  WebSocket: reconnect logic in both Python and Android.
+  ✓  CORS: enabled on all Python endpoints (Android on local Wi-Fi needs this).
+  ✓  Thread safety: WebSocket bridge uses asyncio locks in Python;
+                    Android FactoryWebSocket uses Dispatchers.IO + emit on Main.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BEGIN OUTPUT NOW — start with requirements.txt and go in file order above.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

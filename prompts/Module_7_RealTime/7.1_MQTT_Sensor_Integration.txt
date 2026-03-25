@@ -1,0 +1,52 @@
+============================================================
+PROMPT 7.1 — MQTT Sensor Integration
+============================================================
+
+PROMPT --- Connect cheap IoT sensors to any factory machine
+
+**Context: My static digital twin is fully working. I am now upgrading
+to real-time data.**
+
+I have installed MQTT-capable sensors (ESP32 or Raspberry Pi) on
+factory machines.
+
+The MQTT broker is running on the factory Raspberry Pi at
+192.168.1.100:1883
+
+Complete the MQTTDataSource class in data_source.py that was previously
+a skeleton.
+
+Requirements:
+
+- Subscribe to topic: factory/machines/# (receives data for all
+stations)
+
+- Expected message format from sensors: { \"station_id\": 3,
+\"cycle_time\": 47.2, \"status\": \"running\", \"temperature\": 68.5,
+\"vibration\": 0.23, \"parts_completed\": 145 }
+
+- Handle connection failures gracefully: fall back to
+SyntheticDataSource if broker unreachable
+
+- Thread-safe: sensor messages arrive on a background thread,
+simulation reads on main thread
+
+- Cache latest reading per station: self.latest_readings[station_id]
+= data
+
+- If no message received for > 30 seconds for a station: log warning,
+use synthetic fallback for that station
+
+Also update Android app:
+
+- In the Connection screen: add MQTT broker IP input field
+
+- When MQTT is connected: hide the manual input screen entirely
+
+- Show \"LIVE DATA\" badge on HomeFragment status bar (green pulsing
+dot)
+
+- Change GET /health response to include: { \"mode\": \"realtime\",
+\"connected_stations\": [1,3,4], \"last_update\": timestamp }
+
+Show complete working code for MQTTDataSource and the Android changes.

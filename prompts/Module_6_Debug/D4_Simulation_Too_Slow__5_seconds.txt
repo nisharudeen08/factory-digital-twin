@@ -1,0 +1,42 @@
+============================================================
+PROMPT D4 — Simulation Too Slow (> 5 seconds)
+============================================================
+
+PROMPT --- Use when: Android waits too long for simulation results
+
+**I am debugging slow performance in my Python SimPy factory
+simulation.**
+
+Current performance: POST /simulate takes [X] seconds to respond
+
+Target: under 3 seconds for 30 replications with 5-station factory
+
+My run_replications function:
+
+[PASTE your run_replications function]
+
+My SimPy Station process function:
+
+[PASTE your process_job function]
+
+Please:
+
+1. Profile the code --- identify which line or function takes the most
+time
+
+2. Check if replications can be parallelized using
+concurrent.futures.ProcessPoolExecutor
+
+3. Check if SimPy environment is being re-created unnecessarily
+
+4. Check if NumPy is being used for distributions (faster than Python
+loops)
+
+5. Check if the number of jobs being simulated per replication matches
+demand
+
+6. Suggest the minimum number of replications needed for 95% CI with
+reasonable accuracy
+
+7. Rewrite the run_replications function to be as fast as possible
+while keeping statistical validity

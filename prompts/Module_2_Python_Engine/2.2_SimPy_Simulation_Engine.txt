@@ -1,0 +1,79 @@
+============================================================
+PROMPT 2.2 — SimPy Simulation Engine
+============================================================
+
+PROMPT --- Discrete-event simulation --- the factory running
+through time
+
+**Context: I am building a digital twin. math_engine.py and
+data_source.py are complete.**
+
+Create: factory_simulation.py
+
+Using SimPy library, build a discrete-event simulation of a factory
+production line.
+
+Classes needed:
+
+Class Station:
+
+- Properties: id, name, num_machines (simpy.Resource),
+cycle_time_mean, buffer_capacity
+
+- Method process_job(env, job) --- a SimPy generator function
+
+1. Record arrival time
+
+2. Request the machine resource (this creates the queue)
+
+3. Get cycle time from DataSource (not hardcoded --- call
+data_source.get_cycle_time(self.id))
+
+4. yield env.timeout(cycle_time) --- simulate processing
+
+5. Check for breakdown: call data_source.get_breakdown_probability and
+yield repair time if broken
+
+6. Release machine resource
+
+7. Record departure time, compute wait_time and process_time
+
+Class ProductionLine:
+
+- Constructor takes FactoryConfig and DataSource
+
+- Creates Station objects from config
+
+- Method run_shift(shift_hours, demand) --- main SimPy simulation
+
+1. Create SimPy environment
+
+2. Start job generator process
+
+3. Run env until shift_hours * 3600 simulation seconds
+
+4. Collect and return SimulationResult
+
+Class SimulationResult:
+
+- throughput: int
+
+- lead_time_mean: float
+
+- station_metrics: list[dict] --- per station: utilization, Lq, Wq,
+BNI
+
+- bottleneck_station_id: int
+
+- confidence_interval: tuple
+
+Function run_replications(config, data_source, n_reps=30,
+shift_hours=8, demand=200):
+
+- Runs simulation n_reps times with different random seeds
+
+- Returns list of SimulationResult
+
+- Prints progress: \"Running replication 1/30...\"
+
+Include full error handling. Add type hints throughout.

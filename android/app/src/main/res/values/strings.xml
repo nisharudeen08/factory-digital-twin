@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Factory Digital Twin</string>
+
+    <!-- Navigation -->
+    <string name="worker_dashboard">Home</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_simulate">Simulate</string>
+    <string name="nav_bottleneck">Bottleneck</string>
+    <string name="nav_unity3d">3D View</string>
+    <string name="nav_history">History</string>
+    <string name="nav_alerts">Alerts</string>
+    <string name="nav_stats">Stats</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_assets">Assets</string>
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_compare">Compare</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">Factory Digital Twin</string>
+    <string name="command_center">Command Center</string>
+    <string name="expected_output">Expected Output</string>
+    <string name="active_machines">Active Machines</string>
+    <string name="shift_status">Current Shift Status</string>
+    <string name="digital_twin_snapshot">Digital Twin Snapshot</string>
+    <string name="quick_actions">Quick Actions</string>
+    <string name="report_issue">Report Issue</string>
+    <string name="view_3d">View 3D</string>
+    <string name="on_track">On Track</string>
+    <string name="live">LIVE</string>
+    <string name="offline">OFFLINE</string>
+    <string name="connected">Connected</string>
+    <string name="welcome_back">Welcome back</string>
+
+    <!-- Setup -->
+    <string name="setup_step1_title">What\'s your factory?</string>
+    <string name="setup_step2_title">Select Machines</string>
+    <string name="setup_step3_title">Machine Parameters</string>
+    <string name="setup_review_title">Review &amp; Save</string>
+    <string name="label_stations">Number of Stations</string>
+    <string name="stations_hint">Min 1 · Max 12</string>
+    <string name="select_factory_type">SELECT FACTORY TYPE</string>
+    <string name="number_of_stations">NUMBER OF STATIONS</string>
+
+    <!-- Buttons -->
+    <string name="btn_next">Next: Select Machines</string>
+    <string name="btn_previous">Previous</string>
+    <string name="btn_save">Save &amp; Continue</string>
+    <string name="btn_simulate">Execute Simulation</string>
+    <string name="btn_mark_done">Mark as Done</string>
+    <string name="btn_view_3d">View 3D</string>
+    <string name="btn_retry">Retry</string>
+
+    <!-- Factory types -->
+    <string name="factory_lathe">Lathe / CNC</string>
+    <string name="factory_lathe_sub">Metal machining</string>
+    <string name="factory_textile">Textile</string>
+    <string name="factory_textile_sub">Spinning &amp; weaving</string>
+    <string name="factory_food">Food Processing</string>
+    <string name="factory_food_sub">Pack &amp; process</string>
+    <string name="factory_electronics">Electronics</string>
+    <string name="factory_electronics_sub">PCB assembly</string>
+
+    <!-- Simulate -->
+    <string name="production_goal">Production Goal</string>
+    <string name="workers_on_shift">Workers on Shift</string>
+    <string name="shift_length">Shift Length</string>
+    <string name="machine_integrity">Machine Integrity</string>
+    <string name="projected_output">Projected Output</string>
+    <string name="condition_good">Good</string>
+    <string name="condition_average">Average</string>
+    <string name="condition_poor">Poor</string>
+    <string name="sync_ready">Ready to execute</string>
+
+    <!-- Bottleneck -->
+    <string name="bottleneck_title">Bottleneck Detected</string>
+    <string name="utilization">Utilization</string>
+    <string name="daily_loss">Daily Production Loss</string>
+    <string name="recovery_checklist">Recovery Checklist</string>
+    <string name="node_health">Node Health Status</string>
+    <string name="high_priority">High Priority</string>
+    <string name="sequential_steps">Sequential Steps</string>
+
+    <!-- Machine params -->
+    <string name="cycle_time">Cycle Time</string>
+    <string name="cycle_time_sub">Duration per finished part</string>
+    <string name="num_machines">No. of Machines</string>
+    <string name="num_machines_sub">Parallel processing capacity</string>
+    <string name="variability">Cycle Time Variability</string>
+    <string name="variability_sub">Impact of process unpredictability</string>
+    <string name="mtbf">MTBF</string>
+    <string name="mttr">MTTR</string>
+    <string name="unit_sec">sec</string>
+    <string name="unit_hrs">hrs</string>
+    <string name="unit_min">min</string>
+    <string name="unit_units">units</string>
+    <string name="stable">STABLE</string>
+    <string name="moderate">MODERATE</string>
+    <string name="volatile_label">VOLATILE</string>
+
+    <!-- Status -->
+    <string name="status_running">Running</string>
+    <string name="status_idle">Idle</string>
+    <string name="status_broken">Broken</string>
+    <string name="status_ok">OK</string>
+    <string name="status_fail">Fail</string>
+    <string name="required">Required</string>
+    <string name="selected">selected</string>
+
+    <!-- Tamil -->
+    <string name="ta_simulate">உருவகப்படுத்து</string>
+    <string name="ta_bottleneck">தடையூறு</string>
+    <string name="ta_workers">தொழிலாளர்கள்</string>
+    <string name="ta_production">உற்பத்தி</string>
+    <string name="ta_shift">நீளம்</string>
+    <string name="ta_machine_condition">இயந்திர நிலை</string>
+</resources>

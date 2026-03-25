@@ -1,0 +1,8 @@
+{
+  "factory_type": "lathe",
+  "demand": 200,
+  "operators": 2,
+  "shift_hours": 8,
+  "machine_condition": "average",
+  "language": "en"
+}

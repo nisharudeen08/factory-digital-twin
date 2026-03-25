@@ -1,0 +1,8 @@
+// Keep Unity debug symbols
+android {
+    packagingOptions {
+        doNotStrip "*/arm64-v8a/libil2cpp.so"
+        doNotStrip "*/arm64-v8a/libunity.so"
+        doNotStrip "*/arm64-v8a/libmain.so"
+    }
+}

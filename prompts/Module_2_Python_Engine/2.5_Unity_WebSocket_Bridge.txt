@@ -1,0 +1,65 @@
+============================================================
+PROMPT 2.5 — Unity WebSocket Bridge
+============================================================
+
+PROMPT --- Real-time stream to Unity 3D --- the live animation feed
+
+**Context: api_server.py is complete. I need to add a WebSocket server
+that Unity connects to.**
+
+Add to api_server.py (or create unity_bridge.py):
+
+WebSocket server on port 8765
+
+Class UnityBridge:
+
+- Maintains set of connected Unity clients
+
+- Method broadcast(message: dict) --- sends JSON to all connected
+clients
+
+- Runs background task every 500ms: sends current factory state
+
+The state message format sent every 500ms:
+
+{
+
+\"t\": simulation_time_seconds,
+
+\"shift_pct\": fraction_of_shift_complete,
+
+\"stations\": [
+
+{ \"id\": 1, \"util\": 0.87, \"queue\": 3, \"status\": \"running\",
+\"is_bottleneck\": false, \"name\": \"Lathe\", \"name_ta\": \"தட்டு
+இயந்திரம்\" }
+
+],
+
+\"throughput_so_far\": 87,
+
+\"alert\": null or \"BOTTLENECK at Station 3\",
+
+\"alert_ta\": null or Tamil translation
+
+}
+
+When simulation is NOT running:
+
+- Send last known state with status \"idle\" for all stations
+
+- Include \"mode\": \"static\" or \"realtime\"
+
+WebSocket connection handler:
+
+- On connect: send full config so Unity can rebuild scene if needed
+
+- On message from Unity: handle \"ping\" and \"request_config\"
+
+- On disconnect: log and clean up
+
+The Unity bridge must run in background --- it must not block the
+FastAPI server.
+
+Use asyncio properly so both FastAPI and WebSocket run in the same
+process.

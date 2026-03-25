@@ -1,0 +1,82 @@
+============================================================
+PROMPT 4.1 — MachineSpawner (Core Script)
+============================================================
+
+PROMPT --- The most important Unity script --- auto-builds factory
+from config
+
+**I am building a Unity 3D digital twin for a factory. I have small
+Unity experience.**
+
+Unity version: 2022 LTS, Universal Render Pipeline (URP).
+
+Create: Assets/Scripts/MachineSpawner.cs
+
+This script reads factory_config.json and builds the 3D factory scene
+automatically.
+
+When the config changes, the entire scene rebuilds without restarting.
+
+Requirements:
+
+SERIALIZED FIELDS (assign in Inspector):
+
+- public GameObject[] machinePrefabs --- one per machine type
+
+- public string[] machineIconNames --- matching names for each
+prefab (e.g. \"lathe_machine\")
+
+- public GameObject genericMachinePrefab --- fallback if icon not
+found
+
+- public GameObject conveyorPrefab --- placed between stations
+
+- public Transform factoryParent --- parent for all spawned objects
+
+- public string configPath --- path to factory_config.json
+
+CLASSES (can be in same file):
+
+[System.Serializable] class StationConfig { int id; string name;
+string name_ta; string icon; float cycle_time_sec; int num_machines;
+float position_x; float position_z; }
+
+[System.Serializable] class FactoryConfig { string factory_type;
+string factory_name; string mode; string language; StationConfig[]
+stations; }
+
+METHOD BuildFactory():
+
+1. Read and parse factory_config.json using JsonUtility.FromJson
+
+2. Destroy all children of factoryParent
+
+3. For each station in config.stations:
+
+a. Find matching prefab by icon name (loop through machineIconNames
+array)
+
+b. If not found: use genericMachinePrefab
+
+c. Instantiate at position (station.position_x, 0, station.position_z)
+
+d. Get MachineVisual component, set stationId and stationName
+
+e. Set the label: if language==\"ta\" use station.name_ta, else
+station.name
+
+4. Draw conveyor belts between consecutive stations
+
+5. Log: \"Factory built: X stations loaded\"
+
+METHOD WatchForConfigChanges():
+
+- Use FileSystemWatcher to detect factory_config.json changes
+
+- On change: call BuildFactory() on main thread using a flag +
+Update() pattern
+
+Start(): call BuildFactory() and WatchForConfigChanges()
+
+Add [ContextMenu(\"Rebuild Factory\")] attribute so you can test from
+Inspector right-click.

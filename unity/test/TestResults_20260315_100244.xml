@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="2" result="Passed" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-03-15 04:32:40Z" end-time="2026-03-15 04:32:40Z" duration="0.1048978">
+  <test-suite type="TestSuite" id="1006" name="unity" fullname="unity" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-03-15 04:32:40Z" end-time="2026-03-15 04:32:40Z" duration="0.104898" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1004" name="Tests.dll" fullname="C:/Users/nisharu deen/Downloads/PROJECT/factory_digital_twin/unity/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-03-15 04:32:40Z" end-time="2026-03-15 04:32:40Z" duration="0.085173" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="8092" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestFixture" id="1001" name="NewTestScript" fullname="NewTestScript" classname="NewTestScript" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-03-15 04:32:40Z" end-time="2026-03-15 04:32:40Z" duration="0.077910" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1002" name="NewTestScriptSimplePasses" fullname="NewTestScript.NewTestScriptSimplePasses" methodname="NewTestScriptSimplePasses" classname="NewTestScript" runstate="Runnable" seed="1656843716" result="Passed" start-time="2026-03-15 04:32:40Z" end-time="2026-03-15 04:32:40Z" duration="0.011368" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1003" name="NewTestScriptWithEnumeratorPasses" fullname="NewTestScript.NewTestScriptWithEnumeratorPasses" methodname="NewTestScriptWithEnumeratorPasses" classname="NewTestScript" runstate="Runnable" seed="947232350" result="Passed" start-time="2026-03-15 04:32:40Z" end-time="2026-03-15 04:32:40Z" duration="0.037376" asserts="0">
+          <properties>
+            <property name="_JOINTYPE" value="UnityCombinatorial" />
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -1,0 +1,74 @@
+============================================================
+PROMPT 3.1 — Project Setup + Network Layer
+============================================================
+
+PROMPT --- Android project foundation --- everything before
+building screens
+
+I am building an Android app in Kotlin for a factory digital twin.
+
+The app connects to a Python FastAPI server running on local Wi-Fi (URL
+configurable).
+
+Workers are non-technical. Language: Tamil (primary) + English.
+
+Set up the Android project with:
+
+DEPENDENCIES (build.gradle):
+
+- Retrofit 2.9 + OkHttp for HTTP calls
+
+- Gson converter for Retrofit
+
+- Material Design 3 components
+
+- Navigation component (single activity, multiple fragments)
+
+- DataStore (Preferences) for saving server URL and language
+preference
+
+- Coroutines for async operations
+
+- ViewBinding enabled
+
+NETWORK LAYER:
+
+- ApiService.kt interface with all endpoints matching the Python
+server:
+
+POST /simulate, POST /whatif, GET /bottleneck, GET /stations, GET
+/health, POST /config
+
+- RetrofitClient.kt singleton --- reads server URL from DataStore
+
+- All API calls wrapped in sealed class Result<T> { Success(data),
+Error(message), Loading }
+
+DATA MODELS (data classes in models/):
+
+- SimulationRequest.kt
+
+- SimulationResponse.kt --- matches the Python API response exactly
+
+- WhatIfRequest.kt, WhatIfResponse.kt
+
+- FactoryConfig.kt, Station.kt
+
+LOCALIZATION:
+
+- strings.xml (English): all string resources
+
+- strings-ta.xml (Tamil): Tamil translations for ALL strings
+
+- Key strings: app_name, bottleneck, simulate, throughput, alert,
+add_operator,
+
+running, broken, station, queue_length, lead_time, good_status,
+watch_status, action_needed
+
+SETTINGS:
+
+- SettingsManager.kt --- saves/loads: server_url, language
+(\"en\"/\"ta\"), factory_type, last_config
+
+Create all files with full working code.

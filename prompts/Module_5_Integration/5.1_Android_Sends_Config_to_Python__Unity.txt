@@ -1,0 +1,64 @@
+============================================================
+PROMPT 5.1 — Android Sends Config to Python + Unity
+============================================================
+
+PROMPT --- The factory setup flow: Android → Python → Unity rebuild
+
+**Context: Python server, Android app, and Unity 3D are all
+individually working.**
+
+Now I need to connect them so changing the factory config on Android
+rebuilds the Unity 3D scene.
+
+Fix or verify this end-to-end flow works correctly:
+
+STEP 1 --- Android saves config:
+
+In FactorySetupFragment (first launch screen):
+
+- When worker selects factory type + machines + taps Save
+
+- Build FactoryConfig object from selections
+
+- Call POST /config to Python server
+
+- Also write factory_config.json to shared local storage (for Unity on
+same tablet)
+
+Path: getExternalFilesDir(null) + \"/configs/factory_config.json\"
+
+- Show success: \"Factory saved! 3D view will update automatically\"
+
+STEP 2 --- Python receives config:
+
+In api_server.py POST /config endpoint:
+
+- Validate the config (call config_manager.validate_config)
+
+- Save to configs/factory_config.json (Python's copy)
+
+- Trigger simulation engine to reload config
+
+- Broadcast config update message to Unity via WebSocket:
+
+{ \"type\": \"config_update\", \"config\": { full factory config } }
+
+- Return { \"valid\": true, \"station_count\": N, \"message\":
+\"Config saved\" }
+
+STEP 3 --- Unity receives and rebuilds:
+
+In SimulationManager.cs OnMessage handler:
+
+- Check if message has \"type\": \"config_update\"
+
+- If yes: save the new config JSON to Application.persistentDataPath +
+\"/factory_config.json\"
+
+- Call MachineSpawner.BuildFactory() on main thread
+
+- Show \"Factory Updated\" toast using a UI coroutine (visible for 2
+seconds)
+
+Write the exact code for each step. Point out any async/threading
+issues to watch for.

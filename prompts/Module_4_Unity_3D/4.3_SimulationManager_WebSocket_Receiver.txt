@@ -1,0 +1,71 @@
+============================================================
+PROMPT 4.3 — SimulationManager (WebSocket Receiver)
+============================================================
+
+PROMPT --- Receives Python data every 500ms and updates all
+machines
+
+Context: MachineSpawner.cs and MachineVisual.cs are complete.
+
+Create: Assets/Scripts/SimulationManager.cs
+
+This is the master controller. It connects to Python WebSocket and
+routes data to each machine.
+
+FIELDS:
+
+- public string wsUrl = \"ws://192.168.1.100:8765\"
+
+- Dictionary<int, MachineVisual> stationObjects --- populated by
+MachineSpawner
+
+- public TextMeshPro globalStatusLabel --- shows overall factory
+status at top of scene
+
+- public TextMeshPro throughputLabel
+
+- public Image shiftProgressBar
+
+DATA CLASSES (inner, use [System.Serializable]):
+
+FactoryStateMessage, StationState (fields matching the Python WebSocket
+JSON exactly)
+
+WEBSOCKET CONNECTION:
+
+- Use NativeWebSocket library (add to project via Package Manager)
+
+- Connect on Start(), reconnect automatically if disconnected (retry
+every 3 seconds)
+
+- Show \"Connecting...\" on globalStatusLabel while not connected
+
+- Show \"OFFLINE --- Last update: X seconds ago\" if > 5 seconds
+without message
+
+ON MESSAGE received:
+
+1. Parse JSON to FactoryStateMessage using JsonUtility
+
+2. For each station in message.stations: find MachineVisual by id,
+call UpdateStatus()
+
+3. Update globalStatusLabel: if any is_bottleneck=true: show \"⚠
+BOTTLENECK: [name]\" in red
+
+Else: show \"Factory Running Normally\" in green
+
+4. Update throughputLabel: \"Output so far: X units\"
+
+5. Update shiftProgressBar fill amount = message.shift_pct
+
+METHOD RegisterStation(int id, MachineVisual visual):
+
+- Called by MachineSpawner after spawning each machine
+
+- Adds to stationObjects dictionary
+
+Update(): dispatch WebSocket messages on main thread (required by
+NativeWebSocket)
+
+OnDestroy(): close WebSocket cleanly

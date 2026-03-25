@@ -1,0 +1,22 @@
+# Factory Digital Twin — ERP Integration Guide
+
+This folder (`erp_data/`) is monitored by the Python Digital Twin server for real-time data integration.
+
+## How it works:
+1. When `DATA_MODE` is set to `"realtime"` in `config_manager.py` (or via API).
+2. The `CSVDataSource` script watches this folder for changes to `erp_template.csv`.
+3. Whenever your ERP system (Tally, SAP, etc.) exports a new CSV to this folder, the simulation engine reads it instantly.
+4. The cycle times in the simulation are adjusted dynamically based on the recent production rate ($3600 / qty_produced_last_hour$).
+
+## How to connect your ERP:
+Configure your ERP software to run an hourly batch export.
+Set the export destination to overwrite `erp_template.csv` in this folder.
+
+## CSV Format required:
+- `station_id`: Must match the ID in `factory_config.json`.
+- `machine_status`: `running`, `broken`, `maintenance`, or `idle`.
+- `qty_produced_last_hour`: Integer count of units completed.
+- `scrap_qty_last_hour`: Integer count of defective units.
+- `active_operator`: String name of the current operator.
+
+*Note: The system requires exact column headers as shown in `erp_template.csv`.*

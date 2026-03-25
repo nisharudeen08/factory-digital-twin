@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: factory-twin-server
+    env: python
+    region: singapore
+    plan: free
+    rootDir: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py

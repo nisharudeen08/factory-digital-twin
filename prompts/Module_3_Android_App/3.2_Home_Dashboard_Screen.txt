@@ -1,0 +1,71 @@
+============================================================
+PROMPT 3.2 — Home Dashboard Screen
+============================================================
+
+PROMPT --- Screen 1 --- factory health at a glance for
+non-technical workers
+
+**Context: Android project is set up. Network layer, data models, and
+localization are complete.**
+
+Create: HomeFragment.kt + fragment_home.xml
+
+This is the FIRST screen workers see. It must answer one question
+immediately: \"Is the factory OK?\"
+
+UI Layout (use ConstraintLayout):
+
+TOP BAR:
+
+- Factory name (large, bold) from settings
+
+- Language toggle button (EN | தமிழ்) top right
+
+- Connection status dot (green=connected, red=offline)
+
+STATUS SUMMARY CARD (most prominent element):
+
+- One large sentence: \"Factory is running normally\" / \"Action
+needed at Station 3\"
+
+- Background: green (#16A34A) if OK, red (#DC2626) if bottleneck
+
+- Text in bold, size 20sp, white, in selected language (EN/Tamil)
+
+THREE STATUS CIRCLES (horizontal row):
+
+- Circle 1: Throughput (today's estimated output vs target)
+
+- Circle 2: Bottleneck Risk (percentage, color coded)
+
+- Circle 3: Operator Load (utilization)
+
+- Each circle: outer ring colored (green/amber/red), number in center,
+label below
+
+- Minimum touch target: 56dp diameter
+
+TODAY'S ESTIMATE CARD:
+
+- \"Expected output: 187 ± 23 units\" (mean + confidence range)
+
+- Show P10 / P50 / P90 as a simple horizontal bar range
+
+- Last simulated: X minutes ago
+
+QUICK ACTION BUTTON (only visible if bottleneck exists):
+
+- Large button: \"VIEW BOTTLENECK →\" in red
+
+- Navigates to BottleneckFragment
+
+ViewModel: HomeViewModel.kt
+
+- Loads last simulation result from local cache on startup
+
+- Calls GET /health every 60 seconds to check server connection
+
+- Exposes StateFlow<HomeUiState>
+
+Make the UI clean and uncluttered. No numbers smaller than 14sp. No
+technical terms visible to user.

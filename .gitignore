@@ -1,0 +1,70 @@
+# Build artifacts
+build/
+.gradle/
+gradlew.bat
+gradlew
+gradle/
+
+# IDE files
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.pytest_cache/
+.coverage
+*.egg-info/
+dist/
+*.egg
+
+# Android
+android/app/build/
+android/app/UnityExport/unityLibrary/build/
+android/app/UnityExport/unityLibrary/.cxx/
+android/app/UnityExport/unityLibrary/src/main/Il2CppOutputProject/
+android/app/UnityExport/unityLibrary/src/main/assets/bin/
+android/app/UnityExport/build/
+android/.gradle/
+android/local.properties
+android/.idea/
+
+# Unity
+unity/Library/
+unity/Temp/
+unity/obj/
+*.csproj
+*.sln
+*.user
+*.unityproj
+*.booproj
+
+# Logs
+*.log
+crash_logs*.txt
+logcat*.log
+logcat*.txt
+
+# Temporary files
+.continue/
+*.tmp
+*.temp
+*.bak
+
+# Large/sensitive files
+stitch_api_key.txt
+local.properties
+gradle.properties
+android/app/gradle-8.11.1-src.zip
+unity/Assets/Industrial_Zone_Modular_Pack/Pipelines/Industral_Zone_HDRP.unitypackage

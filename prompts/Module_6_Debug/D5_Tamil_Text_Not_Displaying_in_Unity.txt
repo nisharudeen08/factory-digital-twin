@@ -1,0 +1,38 @@
+============================================================
+PROMPT D5 — Tamil Text Not Displaying in Unity
+============================================================
+
+PROMPT --- Use when: Tamil characters show as boxes or question
+marks in Unity
+
+I am adding Tamil language support to a Unity 3D digital twin.
+
+Problem: Tamil text (e.g. \"தட்டு இயந்திரம்\") shows as empty boxes in the
+Unity scene.
+
+I am using TextMeshPro for station labels.
+
+Current setup: [DESCRIBE what font you are using]
+
+Please give me exact step-by-step instructions to fix this:
+
+1. How to download Noto Sans Tamil font (free, supports Tamil script)
+
+2. How to create a TextMeshPro Font Asset from a Tamil TTF file in
+Unity
+
+(Window → TextMeshPro → Font Asset Creator --- exact settings needed)
+
+3. What Unicode range to include (Tamil block: U+0B80 to U+0BFF)
+
+4. How to assign the Tamil font asset to TextMeshPro components in the
+prefabs
+
+5. How to switch between English (default) and Tamil font at runtime
+based on language setting
+
+6. How to verify Tamil text renders correctly in Game view before
+building to Android
+
+Also: does the Android device need a Tamil font installed, or is the
+font embedded in the app?

@@ -1,0 +1,26 @@
+{
+  "factory_name": "Test",
+  "factory_type": "lathe",
+  "shift_hours": 8,
+  "num_operators": 2,
+  "demand_units": 200,
+  "mode": "static",
+  "language": "en",
+  "stations": [
+    {
+      "id": 1,
+      "name": "Lathe Machine",
+      "name_ta": "Lathe",
+      "icon": "lathe",
+      "num_machines": 2,
+      "workflow_order": 1,
+      "cycle_time_sec": 45,
+      "mtbf_hours": 8.0,
+      "mttr_hours": 0.5,
+      "setup_minutes": 10,
+      "variability": 0.15,
+      "position_x": 0,
+      "position_z": 0
+    }
+  ]
+}

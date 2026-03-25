@@ -1,0 +1,49 @@
+============================================================
+PROMPT 1.1 — Create Full Project Structure
+============================================================
+
+PROMPT --- Project scaffold --- paste this as your very first
+message
+
+**You are helping me build a Digital Twin system for a small
+manufacturing factory.**
+
+The system has three components:
+
+1. Python backend --- SimPy simulation + FastAPI REST server +
+WebSocket bridge
+
+2. Android app (Kotlin) --- worker-facing mobile UI with 5 screens
+
+3. Unity 3D (C#) --- real-time 3D factory visualization
+
+Create the complete project folder structure for all three components.
+
+Requirements:
+
+- Python project: use FastAPI, SimPy, NumPy, SciPy, pandas, websockets
+
+- Android: Kotlin, Retrofit for HTTP, Material Design 3, Gson for JSON
+
+- Unity: C# scripts using UnityWebSocket and NewtonsoftJson
+
+- Include a shared /configs folder for factory_config.json files
+
+- Include a /docs folder
+
+Output:
+
+- The full folder tree showing every file that will be created
+
+- requirements.txt for Python
+
+- A README.md explaining how to run each component
+
+- The base factory_config.json schema with fields: factory_type,
+factory_name, mode, language, stations (array with id, name, icon,
+cycle_time_sec, num_machines, position_x, position_z)
+
+The factory supports these types: lathe, textile, food, electronics.
+
+Each type has different machines. The config file is what drives the
+entire system --- Android writes it, Python reads it, Unity reads it.

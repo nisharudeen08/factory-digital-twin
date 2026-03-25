@@ -1,0 +1,55 @@
+============================================================
+PROMPT 7.2 — OPC-UA Connection for CNC Machines
+============================================================
+
+PROMPT --- Connect modern CNC / PLC machines using industrial
+OPC-UA standard
+
+**Context: My digital twin is working with MQTT sensors. Some machines
+use OPC-UA protocol (Siemens PLC, Fanuc CNC).**
+
+Complete the OPCUADataSource class in data_source.py.
+
+Requirements:
+
+- Use asyncua library: pip install asyncua
+
+- Connect to OPC-UA server at opc.tcp://[machine_ip]:4840
+
+- Read these standard OPC-UA nodes (common on most industrial PLCs):
+
+ns=2;i=1001 → cycle_time_seconds (Float)
+
+ns=2;i=1002 → machine_status (Int: 0=idle, 1=running, 2=fault)
+
+ns=2;i=1003 → parts_completed_today (Int)
+
+ns=2;i=1004 → current_program_name (String)
+
+- Update readings every 1 second in background async loop
+
+- Map machine_status integer to string: 0=\"idle\", 1=\"running\",
+2=\"broken\"
+
+- If nodes do not exist on this particular machine: log which nodes
+are missing, use defaults
+
+Android Connection Screen update:
+
+- Add OPC-UA connection option: text field for machine IP address
+
+- \"Test Connection\" button: calls GET /opcua/test?ip=[ip] on
+Python server
+
+Python endpoint: test connection and return list of available node IDs
+
+- Show which nodes were found and which were not found
+
+- Simple help text: \"This works with Siemens, Fanuc, and Mitsubishi
+CNC machines\"
+
+Include: a node_discovery.py script that scans an OPC-UA server and
+prints all available node IDs.
+
+This helps factory staff identify the correct node IDs for their
+specific machine model.

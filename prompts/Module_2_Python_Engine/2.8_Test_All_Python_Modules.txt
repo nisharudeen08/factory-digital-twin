@@ -1,0 +1,63 @@
+============================================================
+PROMPT 2.8 — Test All Python Modules
+============================================================
+
+PROMPT --- Verify everything works before building Android or Unity
+
+Context: All Python modules are complete:
+
+config_manager.py, data_source.py, math_engine.py,
+factory_simulation.py,
+
+what_if_engine.py, api_server.py, unity_bridge.py, lp_optimizer.py,
+markov_engine.py
+
+Create: test_all.py
+
+Write tests for each module:
+
+1. Test math_engine: verify calc_queue_length_mm1(0.8) = 3.2, Kingman
+with zero variance = M/M/1
+
+2. Test config_manager: load lathe_default.json, verify all fields
+present
+
+3. Test data_source: SyntheticDataSource, verify cycle time within 3
+sigma of mean
+
+4. Test factory_simulation: run 1 replication on lathe config, verify
+throughput > 0
+
+5. Test bottleneck detection: create scenario where station 3 has
+util=0.95, verify it is flagged
+
+6. Test what_if: verify add_machine_at_bottleneck always increases
+throughput
+
+7. Test confidence intervals: 30 reps, verify CI width shrinks with
+more reps
+
+8. Test API: use FastAPI TestClient, call POST /simulate with lathe
+config
+
+Run all tests and print PASS/FAIL for each.
+
+If any test fails, print the exact values that were wrong.
+
+Also create: run_server.py --- a single script that starts FastAPI +
+WebSocket bridge together.
+
+Print startup message: \"Factory Digital Twin Server running at
+http://localhost:8000\"
+
+Print: \"Unity WebSocket at ws://localhost:8765\"
+
+Print: \"Connect Android app to http://[THIS_IP]:8000\"
+
+| Module 3 --- Android App (Kotlin)                                 |
+|                                                                       |
+| 6 prompts --- all 5 worker screens + navigation                     |
+
+Build the Android app in Kotlin with Material Design 3. The app connects
+to the Python server and displays results in simple Tamil/English for
+factory workers.

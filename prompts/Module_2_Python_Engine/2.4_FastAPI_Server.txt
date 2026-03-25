@@ -1,0 +1,66 @@
+============================================================
+PROMPT 2.4 — FastAPI Server
+============================================================
+
+PROMPT --- REST API that Android calls --- all endpoints
+
+**Context: factory_simulation.py, what_if_engine.py, math_engine.py are
+all complete.**
+
+Create: api_server.py
+
+Build a FastAPI application with these exact endpoints:
+
+POST /simulate
+
+- Request body: { factory_type, machines[], demand, operators,
+shift_hours, machine_condition, language }
+
+- Action: loads matching config, runs 30-replication simulation
+
+- Response: { bottleneck_station, bottleneck_name, throughput_mean,
+throughput_ci_lower, throughput_ci_upper, lead_time_mean,
+utilization_per_station[], alert_message, alert_tamil, simulation_id
+}
+
+- Must complete in under 5 seconds (use asyncio to not block)
+
+POST /whatif
+
+- Request body: { simulation_id, scenarios[] } where each scenario
+has name and parameter_changes
+
+- Action: runs what-if comparison against the stored baseline
+simulation
+
+- Response: { baseline, scenarios[], best_scenario,
+recommendation_en, recommendation_ta }
+
+GET /bottleneck
+
+- Response: current bottleneck from last simulation, BNI scores for
+all stations
+
+GET /stations
+
+- Response: array of all stations with current metrics
+
+GET /health
+
+- Response: { status: \"ok\", last_simulation: timestamp, mode:
+\"static\" or \"realtime\" }
+
+POST /config
+
+- Request body: full factory_config JSON from Android
+
+- Action: saves new config, validates it
+
+- Response: { valid: true/false, errors: [] }
+
+CORS: allow all origins (Android app needs this)
+
+Error handling: all endpoints return { error: message } with proper
+HTTP status codes
+
+Logging: log every request with timestamp and processing time

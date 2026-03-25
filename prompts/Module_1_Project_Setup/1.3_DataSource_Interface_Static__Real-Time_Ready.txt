@@ -1,0 +1,69 @@
+============================================================
+PROMPT 1.3 — DataSource Interface (Static + Real-Time Ready)
+============================================================
+
+PROMPT --- The most important architectural decision --- do this
+before any simulation code
+
+**Context: I am building a digital twin. config_manager.py is
+complete.**
+
+I need to build the DataSource interface layer. This is the key
+architectural decision:
+
+the simulation engine must NEVER directly generate data --- it must
+always ask a DataSource object.
+
+This means swapping from simulated data to real IoT data later requires
+changing only ONE line.
+
+Create: data_source.py
+
+Requirements:
+
+- Abstract base class DataSource with method
+get_cycle_time(station_id) -> float
+
+- Abstract method get_station_status(station_id) -> str
+(running/idle/broken)
+
+- Abstract method get_breakdown_probability(station_id, utilization)
+-> float
+
+Implementation 1: SyntheticDataSource(DataSource)
+
+- get_cycle_time: draws from Normal(mean_ct, sigma) where sigma =
+mean_ct * variability_factor
+
+- variability_factor: 0.08 for \"good\" condition, 0.15 for
+\"average\", 0.25 for \"poor\"
+
+- get_breakdown_probability: uses Weibull distribution with beta=1.8,
+eta from config
+
+- get_station_status: returns \"broken\" if random draw <
+breakdown_probability, else \"running\"
+
+Implementation 2: MQTTDataSource(DataSource) --- SKELETON ONLY
+
+- Constructor connects to mqtt_broker_address
+
+- get_cycle_time: returns
+self.latest_readings[station_id][\"cycle_time\"] or falls back to
+synthetic
+
+- Comment every method clearly: \"REPLACE THIS WITH REAL SENSOR DATA
+IN PHASE 2\"
+
+Implementation 3: CSVDataSource(DataSource) --- SKELETON ONLY
+
+- Reads from a CSV file updated by ERP/Tally software
+
+- Comment: \"REPLACE PATH WITH YOUR ERP EXPORT FOLDER IN PHASE 2\"
+
+In config.py add: DATA_MODE = \"synthetic\" and function
+get_data_source() -> DataSource
+
+| Module 2 --- Python Simulation Engine                             |
+|                                                                       |
+| 8 prompts --- build in this exact order                             |

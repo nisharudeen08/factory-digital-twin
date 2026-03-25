@@ -1,0 +1,73 @@
+============================================================
+PROMPT 4.5 — Heatmap Floor + Camera Setup
+============================================================
+
+PROMPT --- Heatmap overlay on factory floor + best camera angle for
+tablet display
+
+**Context: All machine prefabs are created and working. Final Unity
+visual polish needed.**
+
+Create: Assets/Scripts/HeatmapController.cs
+
+The factory floor shows colored tiles based on station utilization.
+
+High utilization stations have a red floor zone. Low utilization have a
+blue/green zone.
+
+The factory floor is a Plane (or Quad) divided into N zones (one per
+station):
+
+APPROACH: Use a floor Quad per station, colored by utilization.
+
+- Each station has a FloorTile child: a flat Quad (scale 4,1,4) at
+y=-0.01 (just below machines)
+
+- FloorTile material uses Lerp between Color.blue (util=0) and
+Color.red (util=1)
+
+- Update color in Update() using Mathf.Lerp with smoothing:
+Color.Lerp(current, target, 0.05f)
+
+- Add semi-transparency: material alpha = 0.4
+
+Create HeatmapController with:
+
+- public MachineVisual[] stations --- assign all in Inspector
+
+- Update(): for each station, read utilization from MachineVisual,
+update floor tile color
+
+CAMERA SETUP instructions (Editor actions, not code):
+
+1. Best angle for factory overview on a tablet: isometric-style
+
+- Camera position: (centerX, 12, -8) where centerX = midpoint of all
+stations
+
+- Camera rotation: (45, 0, 0) --- looking down at 45 degrees
+
+2. Create a CameraController.cs with:
+
+- Mouse scroll to zoom in/out (min distance 6, max distance 20)
+
+- Click and drag to pan (limited to factory bounds)
+
+- Double-tap a station to focus camera on it (lerp to position)
+
+3. For tablet use: touch input instead of mouse
+
+- Pinch to zoom, single finger drag to pan
+
+LIGHTING setup:
+
+- Directional light: intensity 1.2, soft shadows
+
+- Ambient light: color #404050 (slightly blue-gray industrial feel)
+
+- Each machine has a small Point Light child: color matches material,
+intensity 0.3
+
+| Module 5 --- System Integration                                   |
+|                                                                       |
+| Connect all three layers end-to-end                                 |

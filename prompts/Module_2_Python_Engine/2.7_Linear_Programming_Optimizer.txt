@@ -1,0 +1,63 @@
+============================================================
+PROMPT 2.7 — Linear Programming Optimizer
+============================================================
+
+PROMPT --- Optimal scheduling and shadow prices --- the 'what is
+best?' engine
+
+**Context: I am adding Linear Programming to the digital twin. All
+previous modules exist.**
+
+Create: lp_optimizer.py
+
+Using scipy.optimize.linprog (or PuLP if available), implement:
+
+Function optimize_production(config: FactoryConfig, demand: dict,
+shift_hours: float) -> LPResult:
+
+Objective: maximize total throughput (sum of all products produced)
+
+Decision variables: x[i][j] = units of product i processed at
+machine j
+
+Constraints to implement:
+
+1. Machine capacity: sum_i(x[i][j] * cycle_time[i][j]) <=
+shift_hours3600  num_machines[j] * availability[j]
+
+2. Operator constraint: sum_j(operator_time[i][j] * x[i][j])
+<= num_operators  shift_hours  3600
+
+3. Demand min: x[i] >= min_demand[i] for each product i
+
+4. Non-negativity: all x >= 0
+
+Class LPResult:
+
+- optimal: bool
+
+- throughput_optimal: float
+
+- allocation: dict (product -> machine -> quantity)
+
+- shadow_prices: dict (machine_id -> shadow_price_per_minute)
+
+- binding_constraints: list[str] --- which constraints are active
+
+- recommendation_en: str --- plain English explanation of optimal
+allocation
+
+- recommendation_ta: str --- Tamil translation
+
+- bottleneck_resource: str --- resource with highest shadow price
+
+Function shadow_price_to_text(shadow_price, resource_name,
+language=\"en\") -> str:
+
+- Converts shadow price to plain English or Tamil
+
+- Example EN: \"Each extra minute of Machine 3 capacity adds 2.4 units
+of output\"
+
+- Example TA: \"இயந்திரம் 3 இல் ஒரு நிமிடம் கூடுதலாக 2.4 அலகுகள் உற்பத்தி
+அதிகரிக்கும்\"

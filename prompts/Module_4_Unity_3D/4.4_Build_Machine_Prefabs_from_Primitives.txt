@@ -1,0 +1,66 @@
+============================================================
+PROMPT 4.4 — Build Machine Prefabs from Primitives
+============================================================
+
+PROMPT --- Step-by-step: create all machine prefabs for Lathe +
+Textile factories
+
+**Context: All Unity C# scripts are complete. Now I need to create the
+3D machine prefabs.**
+
+I am working in Unity 2022 LTS with URP. I have NOT done 3D modeling
+before.
+
+Give me exact step-by-step instructions (not code --- Unity Editor
+actions) to create these prefabs:
+
+For EACH prefab, tell me:
+
+1. What GameObjects to create (right-click Hierarchy → 3D Object → ?)
+
+2. What scale (x, y, z) to set in Transform
+
+3. What material color to assign (use the 5 materials from
+MachineVisual prompt)
+
+4. Where to position child objects relative to parent
+
+5. What to name the parent GameObject (must match icon name in config)
+
+6. How to save as Prefab (drag to Assets/Prefabs/ folder)
+
+Create instructions for these 8 prefabs:
+
+1. lathe_machine --- lathe turning machine
+
+2. cnc_mill --- CNC milling machine (box with vertical spindle)
+
+3. welding_station --- workbench with arm
+
+4. surface_grinder --- box with rotating disc
+
+5. spinning --- tall frame with horizontal spindles
+
+6. loom --- rectangular loom frame
+
+7. dyeing_vat --- wide cylinder tank
+
+8. generic_machine --- simple labeled box (fallback for all unknown
+machines)
+
+SHARED objects to create once (used in all prefabs):
+
+- WorkerAvatar position and scale (from Mixamo FBX)
+
+- QueueParent empty GameObject position (must be in front of machine,
+not overlapping)
+
+- StationLabel TextMeshPro position (must be 2.5 units above machine
+top)
+
+- BottleneckArrow position (3 units above machine center)
+
+After creating each prefab: add MachineVisual.cs and assign all
+serialized fields.
+
+Tell me exactly what to drag into each slot in the Inspector.

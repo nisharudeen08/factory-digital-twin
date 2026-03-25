@@ -1,0 +1,38 @@
+============================================================
+PROMPT D1 — Simulation Returns Wrong Bottleneck
+============================================================
+
+PROMPT --- Use when: the wrong station is flagged as bottleneck
+
+**I am debugging a digital twin factory simulation. The bottleneck
+detection is wrong.**
+
+My factory config: [PASTE your factory_config.json here]
+
+Expected bottleneck: Station [X] (I know this because its cycle time
+is the highest: [Y] seconds)
+
+Actual result from simulation: Station [Z] is flagged as bottleneck
+
+Here is the bottleneck index calculation code:
+
+[PASTE your calc_bottleneck_index function]
+
+Here is the simulation output showing per-station metrics:
+
+[PASTE the station_metrics from SimulationResult]
+
+Please:
+
+1. Trace through the BNI calculation for each station using the actual
+values
+
+2. Identify why the wrong station is getting the highest BNI
+
+3. Check if the Lq_max normalization is correct (should divide by the
+maximum Lq across all stations)
+
+4. Check if the utilization calculation accounts for num_machines
+correctly (rho = lambda / (mu * c))
+
+5. Fix the code and explain what was wrong

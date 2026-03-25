@@ -1,0 +1,67 @@
+============================================================
+PROMPT 2.1 — Math Engine
+============================================================
+
+PROMPT --- All mathematical formulas --- queuing theory, bottleneck
+index, confidence intervals
+
+Context: I am building a digital twin for a small factory.
+
+Project files already exist: config_manager.py, data_source.py
+
+Create: math_engine.py
+
+Implement ALL of the following functions with full docstrings and
+comments:
+
+QUEUING THEORY:
+
+- calc_utilization(arrival_rate, service_rate, num_machines) ->
+float: rho = lambda/(mu*c)
+
+- calc_queue_length_mm1(rho) -> float: Lq = rho^2 / (1-rho), raise
+ValueError if rho >= 1
+
+- calc_wait_time(Lq, arrival_rate) -> float: Wq = Lq / lambda
+(Little's Law)
+
+- calc_kingman_wq(arrival_rate, service_rate, cv_arrival, cv_service)
+-> float: VUT equation
+
+BOTTLENECK DETECTION:
+
+- calc_bottleneck_index(utilization, Lq, cv_squared, Lq_max, cv_max)
+-> float
+
+BNI = 0.5U + 0.3(Lq/Lq_max) + 0.2*(cv^2/cv_max^2)
+
+- identify_bottleneck(station_metrics: list[dict]) -> dict: returns
+station with highest BNI
+
+- is_clear_bottleneck(bni_scores: list[float]) -> bool: True if gap
+between top 2 > 0.15
+
+RELIABILITY:
+
+- calc_weibull_mtbf(eta, beta) -> float: MTBF = eta * gamma(1 +
+1/beta), use scipy.special.gamma
+
+- calc_availability(mtbf, mttr) -> float: A = MTBF / (MTBF + MTTR)
+
+CONFIDENCE INTERVALS:
+
+- calc_confidence_interval(values: list[float], confidence=0.95) ->
+tuple[float,float,float]
+
+returns (mean, lower_bound, upper_bound) using scipy.stats.t.interval
+
+MONTE CARLO:
+
+- run_monte_carlo(base_params: dict, n_trials=10000) -> dict
+
+Returns {p10, p50, p90, mean, std, prob_target_met} for throughput
+
+Uses numpy for vectorized computation
+
+Each function must: validate inputs, handle edge cases (rho >= 1,
+division by zero), include example usage in docstring.

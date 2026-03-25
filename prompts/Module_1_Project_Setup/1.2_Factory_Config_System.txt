@@ -1,0 +1,50 @@
+============================================================
+PROMPT 1.2 — Factory Config System
+============================================================
+
+PROMPT --- Config manager --- controls what factory the whole
+system uses
+
+**Context: I am building a digital twin. The project structure is
+already created.**
+
+The central file is factory_config.json which controls everything.
+
+Create the following in Python:
+
+File: config_manager.py
+
+- Class FactoryConfig with fields matching the schema
+
+- Method load_config(path) that reads factory_config.json
+
+- Method save_config(config, path) that writes it
+
+- Method validate_config(config) that checks all required fields are
+present
+
+- Dictionary MACHINE_CATALOGUE --- a complete list of all possible
+machines for each factory type:
+
+lathe: [lathe_machine, cnc_mill, drill_press, surface_grinder,
+welding_station, heat_treatment, qc_inspection, deburring]
+
+textile: [spinning, warping, loom, dyeing_vat, drying, cutting,
+stitching, qc_fold]
+
+food: [mixer, oven, cooling_conveyor, filling_machine, labelling,
+qc_food]
+
+electronics: [pcb_machine, smd_placement, reflow_oven,
+manual_soldering, aoi_testing, final_assembly, burn_in_test, packing]
+
+Each machine in the catalogue must have: id, default_cycle_time_sec,
+num_machines_default, icon_name
+
+File: configs/lathe_default.json --- a complete working example for a
+lathe factory with 5 stations
+
+File: configs/textile_default.json --- complete working example for a
+textile factory
+
+Write full Python code with type hints. Include docstrings.

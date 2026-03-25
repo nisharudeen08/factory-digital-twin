@@ -1,0 +1,330 @@
+Context: I have a working Android Factory Digital Twin app with a setup flow
+(Step1TypeFragment → Step2MachinesFragment → Step3SpecsFragment → SetupReviewFragment).
+When the user saves their factory config, it must automatically build the exact 3D
+factory scene in Unity — correct machine types, correct number of machines per station,
+correct layout positions.
+
+This prompt covers THREE things:
+1. Android — how to build and send the config JSON correctly
+2. Python  — how to receive it, save it, and forward to Unity
+3. Unity   — how to read it and spawn the right machines in the right layout
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 1 — ANDROID: Build & Send Config
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+In SetupViewModel.kt, complete buildFactoryConfig():
+
+fun buildFactoryConfig(): FactoryConfig {
+    val stations = machineSpecs.value.mapIndexed { index, spec ->
+        Station(
+            id            = index + 1,
+            name          = spec.nameEn,
+            name_ta       = spec.nameTa,
+            icon          = spec.machineId,        // e.g. "lathe", "weld", "qc"
+            cycle_time_sec= spec.cycleTimeSec,
+            num_machines  = spec.numMachines,      // THIS drives how many boxes Unity spawns
+            mtbf_hours    = spec.mtbfHours,
+            mttr_hours    = spec.mttrHours,
+            setup_minutes = spec.setupMinutes,
+            variability   = spec.variabilityFactor,// 0.08 / 0.15 / 0.25
+            position_x    = index * 5f,            // stations spaced 5 metres apart
+            position_z    = 0f,
+            position_y    = 0f
+        )
+    }
+    return FactoryConfig(
+        factory_type  = selectedFactoryType.value,
+        factory_name  = "My ${selectedFactoryType.value.capitalize()} Factory",
+        mode          = "static",
+        language      = settingsManager.getLanguage(),
+        shift_hours   = 8f,
+        num_operators = 2,
+        stations      = stations
+    )
+}
+
+In SetupReviewFragment.kt, the Save button action:
+
+1. val config = viewModel.buildFactoryConfig()
+2. val json = Gson().toJson(config)
+3. settingsManager.saveFactoryConfig(json)          // save locally to DataStore
+4. Call POST /config with config object via Retrofit
+5. On API success (valid: true):
+   - Show Snackbar: "Factory saved! 3D view is updating..." / "சேமிக்கப்பட்டது! 3D புதுப்பிக்கிறது..."
+   - After 1.5 second delay: navigate to MainActivity, clear back stack
+6. On API failure:
+   - Show Snackbar: "Saved locally — connect server to sync 3D view"
+   - Still navigate to MainActivity after 1.5 seconds
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 2 — PYTHON: Receive & Forward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+In api_server.py, complete the POST /config endpoint:
+
+@app.post("/config")
+async def save_config(config: FactoryConfigSchema):
+    # 1. Validate
+    errors = config_manager.validate_config(config.dict())
+    if errors:
+        return {"valid": False, "errors": errors}
+
+    # 2. Save to disk
+    config_path = "configs/factory_config.json"
+    with open(config_path, "w") as f:
+        json.dump(config.dict(), f, indent=2, ensure_ascii=False)
+
+    # 3. Reload simulation engine with new config
+    simulation_engine.reload_config(config.dict())
+
+    # 4. Broadcast to Unity via WebSocket — IMMEDIATE rebuild trigger
+    await unity_bridge.broadcast({
+        "type": "config_update",
+        "config": config.dict(),
+        "message": "Factory config updated — rebuilding 3D scene"
+    })
+
+    return {
+        "valid": True,
+        "station_count": len(config.stations),
+        "total_machines": sum(s.num_machines for s in config.stations),
+        "message": f"Config saved: {len(config.stations)} stations, "
+                   f"{sum(s.num_machines for s in config.stations)} total machines"
+    }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 3 — UNITY: Read Config & Build Scene
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Update MachineSpawner.cs completely:
+
+[System.Serializable]
+public class StationConfig {
+    public int    id;
+    public string name;
+    public string name_ta;
+    public string icon;           // matches prefab lookup key
+    public float  cycle_time_sec;
+    public int    num_machines;   // HOW MANY BOXES TO SPAWN at this station
+    public float  mtbf_hours;
+    public float  mttr_hours;
+    public float  position_x;
+    public float  position_z;
+}
+
+[System.Serializable]
+public class FactoryConfig {
+    public string          factory_type;
+    public string          factory_name;
+    public string          language;
+    public StationConfig[] stations;
+}
+
+SPAWNER FIELDS (assign in Inspector):
+  public GameObject stationBoxPrefab;    // the ONE box prefab
+  public GameObject conveyorPrefab;
+  public Transform  factoryParent;
+  public string     configPath;
+  public SimulationManager simManager;
+
+METHOD BuildFactory(string configJson = null):
+
+  // 1. Clear ALL existing station GameObjects
+  foreach (Transform child in factoryParent)
+      Destroy(child.gameObject);
+  simManager.ClearAllStations();
+
+  // 2. Load config — from parameter (WebSocket) or file (startup)
+  string json = configJson ?? File.ReadAllText(configPath);
+  FactoryConfig cfg = JsonUtility.FromJson<FactoryConfig>(json);
+
+  // 3. For each station, spawn num_machines boxes
+  for (int i = 0; i < cfg.stations.Length; i++) {
+      StationConfig s = cfg.stations[i];
+
+      // Station anchor position (centre of all machines at this station)
+      Vector3 stationPos = new Vector3(s.position_x, 0f, s.position_z);
+
+      // ── SPAWN num_machines BOXES ──────────────────────────────────────
+      // If num_machines == 1: spawn at stationPos directly
+      // If num_machines >= 2: spread boxes along Z axis, centred on stationPos
+      //   spacing = 1.8 units between boxes
+      //   offset = (j - (num_machines-1)/2f) * 1.8f   on Z axis
+
+      for (int j = 0; j < s.num_machines; j++) {
+          float zOffset = s.num_machines > 1
+              ? (j - (s.num_machines - 1) / 2f) * 1.8f
+              : 0f;
+          Vector3 boxPos = stationPos + new Vector3(0f, 0f, zOffset);
+
+          GameObject box = Instantiate(stationBoxPrefab, boxPos,
+                                       Quaternion.identity, factoryParent);
+          box.name = $"S{s.id}_{s.icon}_M{j+1}";
+
+          MachineVisual mv   = box.GetComponent<MachineVisual>();
+          mv.stationId       = s.id;
+          mv.machineIndex    = j;          // which machine in this station (0-based)
+          mv.stationName     = s.name;
+          mv.stationNameTa   = s.name_ta;
+          mv.numMachinesTotal= s.num_machines;
+
+          // Only show label on FIRST machine of each station
+          mv.showLabel = (j == 0);
+
+          // Register this box with SimulationManager
+          // Multiple boxes at same station ALL respond to same station data
+          simManager.RegisterMachine(s.id, j, mv);
+      }
+
+      // ── STATION COUNT LABEL ───────────────────────────────────────────
+      // If num_machines > 1: spawn a small count badge above station centre
+      // "× 2" floating text so worker knows there are 2 machines here
+      if (s.num_machines > 1) {
+          SpawnMachineCountLabel(stationPos, s.num_machines);
+      }
+
+      // ── CONVEYOR to next station ──────────────────────────────────────
+      if (i < cfg.stations.Length - 1) {
+          Vector3 nextPos = new Vector3(cfg.stations[i+1].position_x, 0f,
+                                        cfg.stations[i+1].position_z);
+          DrawConveyor(stationPos, nextPos);
+      }
+  }
+
+  Debug.Log($"[Factory] Built: {cfg.stations.Length} stations, " +
+            $"{cfg.stations.Sum(s => s.num_machines)} total machine boxes");
+
+METHOD SpawnMachineCountLabel(Vector3 pos, int count):
+  // Spawn a World Space Canvas 2.2 units above pos
+  // TextMeshPro text: "× " + count
+  // Font size 5, color purple #6D28D9, Poppins font
+  // Visible only when count > 1
+
+METHOD DrawConveyor(Vector3 from, Vector3 to):
+  // Spawn conveyor prefab at midpoint between station centres
+  // Scale X = distance - 1 unit (so it doesn't overlap boxes)
+  Vector3 mid = (from + to) / 2f;
+  float   len = Vector3.Distance(from, to);
+  var obj = Instantiate(conveyorPrefab, mid, Quaternion.identity, factoryParent);
+  obj.transform.LookAt(to);
+  obj.transform.localScale = new Vector3(0.4f, 0.1f, len - 1.5f);
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+UPDATE SimulationManager.cs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Change the station registry to support multiple machines per station:
+
+// OLD: Dictionary<int, MachineVisual> stationObjects
+// NEW:
+Dictionary<int, List<MachineVisual>> stationMachines = new();
+
+public void RegisterMachine(int stationId, int machineIndex, MachineVisual mv) {
+    if (!stationMachines.ContainsKey(stationId))
+        stationMachines[stationId] = new List<MachineVisual>();
+    stationMachines[stationId].Add(mv);
+}
+
+public void ClearAllStations() {
+    stationMachines.Clear();
+}
+
+In OnMessage handler, when updating station status:
+// Python sends one status per STATION (not per machine)
+// ALL machines at that station get the SAME color/status
+// BUT queue is split: if queue=6 and num_machines=2,
+//   show 3 queue boxes per machine (queue / num_machines, rounded up)
+
+if (stationMachines.ContainsKey(stationData.id)) {
+    var machines = stationMachines[stationData.id];
+    int queuePerMachine = Mathf.CeilToInt(
+        (float)stationData.queue / machines.Count);
+
+    foreach (var mv in machines) {
+        mv.UpdateStatus(
+            stationData.util,
+            queuePerMachine,       // split queue across machines
+            stationData.status,
+            stationData.is_bottleneck,
+            currentLanguage
+        );
+    }
+}
+
+Handle "config_update" WebSocket message type:
+if (msg.type == "config_update") {
+    string configJson = JsonUtility.ToJson(msg.config);  // re-serialize
+    // Must call on main thread:
+    mainThreadActions.Enqueue(() => {
+        machineSpawner.BuildFactory(configJson);
+        ShowToast("Factory Updated!", 2f);
+    });
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+UPDATE MachineVisual.cs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Add new fields:
+  public int  machineIndex;       // 0, 1, 2... within a station
+  public int  numMachinesTotal;   // total parallel machines at this station
+  public bool showLabel;          // only first machine shows the station label
+
+In UpdateLabel():
+  if (!showLabel) {
+      if (labelText != null) labelText.gameObject.SetActive(false);
+      return;
+  }
+  // Show: stationName + "\n" + util% + "\n" + "Q:" + queueCount
+  // If numMachinesTotal > 1, also show: "(" + numMachinesTotal + " machines)"
+  string machineInfo = numMachinesTotal > 1
+      ? $"\n({numMachinesTotal} machines)"
+      : "";
+  labelText.text = displayName + "\n" + utilStr + "  Q:" + queue + machineInfo;
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXAMPLE LAYOUTS UNITY WILL BUILD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Config: Lathe(2 machines), Welding(1), QC(1) — 3 stations, 4 boxes total
+
+  Z=+0.9  [🔩 Lathe M1]
+           x=0
+  Z=-0.9  [🔩 Lathe M2]      →→conveyor→→     [🔥 Weld x1]   →→conveyor→→   [🔍 QC x1]
+                                                 x=5                            x=10
+
+Config: Welding(3 machines) — 1 station, 3 boxes
+
+  Z=+1.8  [🔥 Weld M1]
+  Z= 0.0  [🔥 Weld M2]     (label "Welding Station × 3" above centre)
+  Z=-1.8  [🔥 Weld M3]
+
+Config: Textile — Spinning(2), Loom(2), Dyeing(1), QC(1)
+
+  [🌀🌀]  →→  [🔀🔀]  →→  [🪣]  →→  [🔍]
+   x=0         x=5         x=10      x=15
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT ORDER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Android — SetupViewModel.kt (buildFactoryConfig complete)
+2. Android — SetupReviewFragment.kt (save + POST /config + navigate)
+3. Android — FactoryConfig.kt and Station.kt data classes
+   (must match Python JSON exactly — same field names)
+4. Python  — api_server.py POST /config endpoint (complete)
+5. Python  — unity_bridge.py broadcast config_update (complete)
+6. Unity   — MachineSpawner.cs (full rewrite with num_machines loop)
+7. Unity   — SimulationManager.cs (multi-machine registry + config_update handler)
+8. Unity   — MachineVisual.cs (showLabel + machineIndex fields added)
+
+After all files, output:
+INTEGRATION TEST CHECKLIST:
+- Android: save a Lathe config with 2 lathe machines + 1 welding + 1 QC
+- Expected Python log: "Config saved: 3 stations, 4 total machines"
+- Expected Unity Console: "Built: 3 stations, 4 total machine boxes"
+- Expected 3D scene: 2 boxes side-by-side at x=0, 1 box at x=5, 1 box at x=10
+- Conveyor belts between x=0→x=5 and x=5→x=10
+
+Output every file completely. No shortcuts. No "// ... rest of code".

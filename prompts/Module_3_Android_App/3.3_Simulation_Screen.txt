@@ -1,0 +1,79 @@
+============================================================
+PROMPT 3.3 — Simulation Screen
+============================================================
+
+PROMPT --- Screen 2 --- worker inputs to run a simulation
+
+Context: HomeFragment is complete.
+
+Create: SimulateFragment.kt + fragment_simulate.xml
+
+This screen lets workers set parameters and run the simulation. All
+labels in Tamil + English.
+
+NO TECHNICAL TERMS. Translate every parameter to plain factory
+language.
+
+UI Layout:
+
+HEADER: \"Run Simulation\" / \"உருவகப்படுத்து\" with back arrow
+
+INPUT SECTION --- use cards, not raw inputs:
+
+Card 1 --- How many products today?
+
+- Large number input (numericDecimal keyboard)
+
+- Plus/minus stepper buttons (large, 48dp touch target)
+
+- Range hint: \"Typical: 150--250\"
+
+- Tamil label: \"இன்று எத்தனை பொருட்கள்?\"
+
+Card 2 --- How many workers on shift?
+
+- Horizontal stepper: 1 / 2 / 3 / 4 (tap to select, selected = filled
+circle)
+
+- Tamil label: \"ஷிப்டில் எத்தனை தொழிலாளர்கள்?\"
+
+Card 3 --- Shift length
+
+- Dropdown/chip group: 6 hours / 8 hours / 10 hours / 12 hours
+
+- Tamil label: \"வேலை நேரம்\"
+
+Card 4 --- Machine condition
+
+- Three large buttons side by side: Good / Average / Poor
+
+- Icons: ✅ / ⚠️ / ❌
+
+- Color when selected: green / amber / red
+
+- Tamil: \"நல்லது\" / \"சராசரி\" / \"மோசம்\"
+
+RUN BUTTON:
+
+- Full width, 56dp height, primary color
+
+- Text: \"SIMULATE\" / \"உருவகப்படுத்து\" (large, bold)
+
+- Shows CircularProgressIndicator while running
+
+- Disabled while loading
+
+LOADING STATE:
+
+- Replace button with: progress bar + \"Calculating... (2-3
+seconds)\" / \"கணக்கிடுகிறது...\"
+
+SimulateViewModel.kt:
+
+- Collects form inputs
+
+- Calls POST /simulate
+
+- On success: navigate to BottleneckFragment with result
+
+- On error: show Snackbar with plain error message (no stack traces)
